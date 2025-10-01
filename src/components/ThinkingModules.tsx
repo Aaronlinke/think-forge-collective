@@ -1,7 +1,6 @@
 import { Bot, Cpu, Layers, Rocket, Sparkles, Zap } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
 
 const modules = [
   {
@@ -11,7 +10,6 @@ const modules = [
     status: "Active",
     color: "primary",
     features: ["React", "Flask", "Vue.js", "Express"],
-    link: "/app-creator",
   },
   {
     icon: Bot,
@@ -20,7 +18,6 @@ const modules = [
     status: "Active",
     color: "secondary",
     features: ["Multi-Agent", "Task Queue", "Learning"],
-    link: "/ai-ecosystem",
   },
   {
     icon: Cpu,
@@ -29,34 +26,30 @@ const modules = [
     status: "Active",
     color: "accent",
     features: ["MacaluLite", "Distributed", "Real-time"],
-    link: "/edge-computing",
   },
   {
     icon: Layers,
     title: "Black Sultan OS",
     description: "Full-Stack Monorepo mit Event-driven Architecture",
-    status: "Active",
+    status: "Beta",
     color: "success",
     features: ["Docker", "Prisma", "EventBus"],
-    link: "/black-sultan-os",
   },
   {
     icon: Sparkles,
     title: "Collective Mind",
     description: "Kollektive Intelligenz-Algorithmen für Problemlösung",
-    status: "Active",
+    status: "Coming Soon",
     color: "primary",
     features: ["Neural Nets", "Swarm Logic", "Consensus"],
-    link: "/collective-mind",
   },
   {
     icon: Zap,
     title: "Solution Forge",
     description: "10.000 Möglichkeiten → 1 optimale Lösung",
-    status: "Active",
+    status: "Coming Soon",
     color: "accent",
     features: ["Optimization", "Scoring", "Selection"],
-    link: "/solution-forge",
   },
 ];
 
@@ -83,10 +76,10 @@ const ThinkingModules = () => {
           {modules.map((module, index) => {
             const Icon = module.icon;
             return (
-              <Link key={index} to={module.link}>
-                <Card
-                  className="group relative overflow-hidden bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all duration-500 hover:shadow-glow-primary cursor-pointer h-full"
-                >
+              <Card
+                key={index}
+                className="group relative overflow-hidden bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all duration-500 hover:shadow-glow-primary cursor-pointer"
+              >
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
                 <div className="relative p-6 space-y-4">
@@ -123,9 +116,8 @@ const ThinkingModules = () => {
                   </div>
                 </div>
 
-                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
-                </Card>
-              </Link>
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+              </Card>
             );
           })}
         </div>

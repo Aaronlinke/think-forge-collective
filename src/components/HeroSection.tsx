@@ -1,6 +1,5 @@
 import { Brain, Lightbulb, Network } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 
 const HeroSection = () => {
   return (
@@ -27,25 +26,21 @@ const HeroSection = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
-            <Link to="/collective-mind">
-              <Button 
-                size="lg" 
-                className="bg-gradient-primary hover:opacity-90 transition-all duration-300 shadow-glow-primary text-lg px-8 py-6 rounded-xl font-semibold"
-              >
-                <Lightbulb className="mr-2 h-5 w-5" />
-                Start Thinking
-              </Button>
-            </Link>
-            <a href="#modules">
-              <Button 
-                size="lg" 
-                variant="outline"
-                className="border-primary/50 hover:bg-primary/10 transition-all duration-300 text-lg px-8 py-6 rounded-xl font-semibold"
-              >
-                <Network className="mr-2 h-5 w-5" />
-                Explore Modules
-              </Button>
-            </a>
+            <Button 
+              size="lg" 
+              className="bg-gradient-primary hover:opacity-90 transition-all duration-300 shadow-glow-primary text-lg px-8 py-6 rounded-xl font-semibold"
+            >
+              <Lightbulb className="mr-2 h-5 w-5" />
+              Start Thinking
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline"
+              className="border-primary/50 hover:bg-primary/10 transition-all duration-300 text-lg px-8 py-6 rounded-xl font-semibold"
+            >
+              <Network className="mr-2 h-5 w-5" />
+              Explore Modules
+            </Button>
           </div>
 
           <div className="grid grid-cols-3 gap-8 max-w-3xl mx-auto pt-12">
