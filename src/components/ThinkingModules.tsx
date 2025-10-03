@@ -1,6 +1,7 @@
 import { Bot, Cpu, Layers, Rocket, Sparkles, Zap } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 
 const modules = [
   {
@@ -10,6 +11,7 @@ const modules = [
     status: "Active",
     color: "primary",
     features: ["React", "Flask", "Vue.js", "Express"],
+    path: "/app-creator",
   },
   {
     icon: Bot,
@@ -18,6 +20,7 @@ const modules = [
     status: "Active",
     color: "secondary",
     features: ["Multi-Agent", "Task Queue", "Learning"],
+    path: "/ai-ecosystem",
   },
   {
     icon: Cpu,
@@ -26,37 +29,39 @@ const modules = [
     status: "Active",
     color: "accent",
     features: ["MacaluLite", "Distributed", "Real-time"],
+    path: "/edge-computing",
   },
   {
     icon: Layers,
     title: "Black Sultan OS",
     description: "Full-Stack Monorepo mit Event-driven Architecture",
-    status: "Beta",
+    status: "Active",
     color: "success",
     features: ["Docker", "Prisma", "EventBus"],
+    path: "/black-sultan",
   },
   {
     icon: Sparkles,
     title: "Collective Mind",
     description: "Kollektive Intelligenz-Algorithmen für Problemlösung",
-    status: "Coming Soon",
+    status: "Active",
     color: "primary",
     features: ["Neural Nets", "Swarm Logic", "Consensus"],
+    path: "/collective-mind",
   },
   {
     icon: Zap,
     title: "Solution Forge",
     description: "10.000 Möglichkeiten → 1 optimale Lösung",
-    status: "Coming Soon",
+    status: "Active",
     color: "accent",
     features: ["Optimization", "Scoring", "Selection"],
+    path: "/solution-forge",
   },
 ];
 
 const statusColors = {
   Active: "bg-success/20 text-success border-success/50",
-  Beta: "bg-secondary/20 text-secondary border-secondary/50",
-  "Coming Soon": "bg-muted text-muted-foreground border-muted",
 };
 
 const ThinkingModules = () => {
@@ -76,9 +81,9 @@ const ThinkingModules = () => {
           {modules.map((module, index) => {
             const Icon = module.icon;
             return (
-              <Card
-                key={index}
-                className="group relative overflow-hidden bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all duration-500 hover:shadow-glow-primary cursor-pointer"
+              <Link key={index} to={module.path}>
+                <Card
+                  className="group relative overflow-hidden bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all duration-500 hover:shadow-glow-primary cursor-pointer h-full"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
@@ -89,9 +94,9 @@ const ThinkingModules = () => {
                     </div>
                     <Badge 
                       variant="outline" 
-                      className={statusColors[module.status as keyof typeof statusColors]}
+                      className={statusColors.Active}
                     >
-                      {module.status}
+                      Active
                     </Badge>
                   </div>
 
@@ -116,8 +121,9 @@ const ThinkingModules = () => {
                   </div>
                 </div>
 
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
-              </Card>
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+                </Card>
+              </Link>
             );
           })}
         </div>

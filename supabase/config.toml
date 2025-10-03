@@ -1,1 +1,4 @@
 project_id = "cyzgmlgbpbcyomlkvrrm"
+
+[functions.collective-think]
+verify_jwt = true
