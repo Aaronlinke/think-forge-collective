@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          is_favorite: boolean | null
+          is_shared: boolean | null
+          module_type: string
+          share_token: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_favorite?: boolean | null
+          is_shared?: boolean | null
+          module_type: string
+          share_token?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_favorite?: boolean | null
+          is_shared?: boolean | null
+          module_type?: string
+          share_token?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       Ij: {
         Row: {
           created_at: string
@@ -26,6 +62,95 @@ export type Database = {
         Update: {
           created_at?: string
           id?: number
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          updated_at: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id: string
+          updated_at?: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      user_stats: {
+        Row: {
+          badges: Json | null
+          created_at: string
+          current_streak: number | null
+          last_thought_date: string | null
+          longest_streak: number | null
+          total_thoughts: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          badges?: Json | null
+          created_at?: string
+          current_streak?: number | null
+          last_thought_date?: string | null
+          longest_streak?: number | null
+          total_thoughts?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          badges?: Json | null
+          created_at?: string
+          current_streak?: number | null
+          last_thought_date?: string | null
+          longest_streak?: number | null
+          total_thoughts?: number | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
