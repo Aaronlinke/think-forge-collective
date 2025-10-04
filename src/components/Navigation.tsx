@@ -1,6 +1,13 @@
-import { Brain, Menu, LogOut, User } from "lucide-react";
+import { Brain, Menu, LogOut, User, Settings, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -56,22 +63,34 @@ const Navigation = () => {
                 {link.name}
               </a>
             ))}
-            {user && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <User className="h-4 w-4" />
-                <span>{user.email}</span>
-              </div>
-            )}
             {user ? (
-              <Button 
-                size="sm"
-                variant="outline"
-                onClick={handleSignOut}
-                className="flex items-center gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                Abmelden
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <User className="h-4 w-4" />
+                    <span className="hidden sm:inline">{user.email?.split('@')[0]}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="px-2 py-1.5">
+                    <p className="text-sm font-medium">{user.email}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/dashboard")} className="cursor-pointer">
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/settings")} className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Einstellungen
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Abmelden
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Button 
                 size="sm"
@@ -101,10 +120,28 @@ const Navigation = () => {
                   </a>
                 ))}
                 {user && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <User className="h-4 w-4" />
-                    <span className="text-sm">{user.email}</span>
-                  </div>
+                  <>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <User className="h-4 w-4" />
+                      <span className="text-sm">{user.email}</span>
+                    </div>
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate("/dashboard")}
+                      className="flex items-center gap-2 w-full"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      Dashboard
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate("/settings")}
+                      className="flex items-center gap-2 w-full"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Einstellungen
+                    </Button>
+                  </>
                 )}
                 {user ? (
                   <Button 

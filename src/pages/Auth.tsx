@@ -20,13 +20,13 @@ const Auth = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate("/");
+        navigate("/dashboard");
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
-        navigate("/");
+        navigate("/dashboard");
       }
     });
 
@@ -77,7 +77,7 @@ const Auth = () => {
       if (error) throw error;
 
       toast.success("Willkommen zurück!");
-      navigate("/");
+      navigate("/dashboard");
     } catch (error: any) {
       setError(error.message || "Fehler beim Anmelden");
     } finally {

@@ -1,18 +1,42 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import HeroSection from "@/components/HeroSection";
 import ThinkingModules from "@/components/ThinkingModules";
 import CollectiveIntelligence from "@/components/CollectiveIntelligence";
 
 const Index = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        navigate("/dashboard");
+      } else {
+        setLoading(false);
+      }
+    });
+  }, [navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen animate-fade-in">
       <Navigation />
       <main>
         <HeroSection />
-        <div id="modules">
+        <div id="modules" className="animate-fade-in">
           <ThinkingModules />
         </div>
-        <div id="intelligence">
+        <div id="intelligence" className="animate-fade-in">
           <CollectiveIntelligence />
         </div>
       </main>
