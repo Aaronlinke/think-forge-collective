@@ -3,10 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Send, Save, Share2, Download, Trash2 } from "lucide-react";
+import { Loader2, Send, Save, Share2, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCollectiveThink } from "@/hooks/useCollectiveThink";
+import MessageBubble from "./MessageBubble";
+import TypingIndicator from "./TypingIndicator";
+import ConversationSidebar from "./ConversationSidebar";
 
 type Message = {
   role: "user" | "assistant";
@@ -34,24 +37,33 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    loadConversations();
-  }, [moduleType]);
-
-  useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isLoading]);
 
-  const loadConversations = async () => {
-    const { data, error } = await supabase
-      .from("conversations")
-      .select("id, title, is_favorite")
-      .eq("module_type", moduleType)
-      .order("updated_at", { ascending: false });
 
-    if (!error && data) {
-      setConversations(data);
+  const loadConversation = async (convId: string) => {
+    try {
+      const { data: messagesData, error } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("conversation_id", convId)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+
+      setMessages(
+        messagesData.map((msg) => ({
+          id: msg.id,
+          role: msg.role as "user" | "assistant",
+          content: msg.content,
+        }))
+      );
+      setCurrentConversationId(convId);
+    } catch (error) {
+      console.error("Error loading conversation:", error);
+      toast.error("Fehler beim Laden der Konversation");
     }
   };
 
@@ -90,7 +102,6 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
         });
       }
 
-      await loadConversations();
       toast.success("Unterhaltung gespeichert!");
     } catch (error) {
       console.error("Error saving conversation:", error);
@@ -203,46 +214,39 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold gradient-text">{moduleTitle}</h2>
-        <div className="flex gap-2">
-          <Button variant="outline" size="icon" onClick={newConversation}>
-            <Trash2 className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon" onClick={saveConversation}>
-            <Save className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon" onClick={exportConversation}>
-            <Download className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon" onClick={shareConversation}>
-            <Share2 className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
-      <Card className="flex-1 flex flex-col border-primary/20">
-        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    message.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
-                  }`}
-                >
-                  <p className="whitespace-pre-wrap">{message.content}</p>
-                </div>
-              </div>
-            ))}
+    <div className="flex gap-4 h-full">
+      <ConversationSidebar
+        moduleType={moduleType}
+        currentConversationId={currentConversationId}
+        onSelectConversation={loadConversation}
+        onNewConversation={newConversation}
+      />
+      
+      <div className="flex-1 flex flex-col">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold gradient-text">{moduleTitle}</h2>
+          <div className="flex gap-2">
+            <Button variant="outline" size="icon" onClick={saveConversation} title="Speichern">
+              <Save className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={exportConversation} title="Exportieren">
+              <Download className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={shareConversation} title="Teilen">
+              <Share2 className="h-4 w-4" />
+            </Button>
           </div>
-        </ScrollArea>
+        </div>
+
+        <Card className="flex-1 flex flex-col border-primary/20">
+          <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+            <div className="space-y-4">
+              {messages.map((message) => (
+                <MessageBubble key={message.id} role={message.role} content={message.content} />
+              ))}
+              {isLoading && <TypingIndicator />}
+            </div>
+          </ScrollArea>
 
         <div className="p-4 border-t border-border">
           <div className="flex gap-2">
@@ -269,7 +273,8 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
             </Button>
           </div>
         </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };

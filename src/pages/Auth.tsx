@@ -6,14 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, AlertCircle } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -33,6 +35,13 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    
+    if (password.length < 6) {
+      setError("Passwort muss mindestens 6 Zeichen lang sein");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -46,9 +55,9 @@ const Auth = () => {
 
       if (error) throw error;
 
-      toast.success("Account created! Please check your email to verify.");
+      toast.success("Account erstellt! Bitte überprüfe deine E-Mail.");
     } catch (error: any) {
-      toast.error(error.message || "Error creating account");
+      setError(error.message || "Fehler beim Erstellen des Accounts");
     } finally {
       setLoading(false);
     }
@@ -56,6 +65,7 @@ const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setLoading(true);
 
     try {
@@ -66,10 +76,10 @@ const Auth = () => {
 
       if (error) throw error;
 
-      toast.success("Welcome back!");
+      toast.success("Willkommen zurück!");
       navigate("/");
     } catch (error: any) {
-      toast.error(error.message || "Error signing in");
+      setError(error.message || "Fehler beim Anmelden");
     } finally {
       setLoading(false);
     }
@@ -92,7 +102,14 @@ const Auth = () => {
             <CardDescription>Melde dich an oder erstelle einen Account</CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            <Tabs defaultValue="signin" className="w-full" onValueChange={() => setError(null)}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">Anmelden</TabsTrigger>
                 <TabsTrigger value="signup">Registrieren</TabsTrigger>

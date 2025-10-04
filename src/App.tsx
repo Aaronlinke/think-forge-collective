@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import Dashboard from "./pages/Dashboard";
 import AppCreator from "./pages/AppCreator";
 import AIEcosystem from "./pages/AIEcosystem";
 import EdgeComputing from "./pages/EdgeComputing";
@@ -24,6 +25,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/app-creator" element={<AppCreator />} />
           <Route path="/ai-ecosystem" element={<AIEcosystem />} />
           <Route path="/edge-computing" element={<EdgeComputing />} />
