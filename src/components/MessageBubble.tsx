@@ -1,8 +1,12 @@
+import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import remarkGfm from "remark-gfm";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Check, Copy } from "lucide-react";
+import { toast } from "sonner";
 
 type MessageBubbleProps = {
   role: "user" | "assistant";
@@ -10,6 +14,15 @@ type MessageBubbleProps = {
 };
 
 const MessageBubble = ({ role, content }: MessageBubbleProps) => {
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  const copyToClipboard = async (text: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopiedCode(text);
+    toast.success("Code kopiert!");
+    setTimeout(() => setCopiedCode(null), 2000);
+  };
+
   if (role === "user") {
     return (
       <div className="flex justify-end">
@@ -29,15 +42,31 @@ const MessageBubble = ({ role, content }: MessageBubbleProps) => {
             code(props) {
               const { node, inline, className, children, ...rest } = props as any;
               const match = /language-(\w+)/.exec(className || "");
+              const codeString = String(children).replace(/\n$/, "");
+              
               return !inline && match ? (
-                <SyntaxHighlighter
-                  style={oneDark as any}
-                  language={match[1]}
-                  PreTag="div"
-                  className="rounded-md my-2"
-                >
-                  {String(children).replace(/\n$/, "")}
-                </SyntaxHighlighter>
+                <div className="relative group">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => copyToClipboard(codeString)}
+                  >
+                    {copiedCode === codeString ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <SyntaxHighlighter
+                    style={oneDark as any}
+                    language={match[1]}
+                    PreTag="div"
+                    className="rounded-md my-2"
+                  >
+                    {codeString}
+                  </SyntaxHighlighter>
+                </div>
               ) : (
                 <code className="bg-background px-1.5 py-0.5 rounded text-sm" {...rest}>
                   {children}

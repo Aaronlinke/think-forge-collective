@@ -1,4 +1,4 @@
-import { Brain, Menu, LogOut, User, Settings, Sparkles } from "lucide-react";
+import { Brain, Menu, LogOut, User, Settings, Sparkles, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useTheme } from "next-themes";
 
 const navLinks = [
   { name: "Modules", href: "#modules" },
@@ -21,6 +22,7 @@ const navLinks = [
 const Navigation = () => {
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -53,7 +55,7 @@ const Navigation = () => {
             </span>
           </a>
 
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-4">
             {navLinks.map((link) => (
               <a
                 key={link.name}
@@ -63,6 +65,17 @@ const Navigation = () => {
                 {link.name}
               </a>
             ))}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            >
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

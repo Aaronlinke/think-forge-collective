@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Flame, Trophy, Star, Zap } from "lucide-react";
 
 type UserStats = {
@@ -48,14 +49,25 @@ const GamificationDashboard = () => {
     return (
       <Card className="border-primary/20">
         <CardHeader>
-          <div className="h-6 bg-muted animate-pulse rounded w-1/2 mb-2" />
-          <div className="h-4 bg-muted animate-pulse rounded w-3/4" />
+          <Skeleton className="h-6 w-48 mb-2" />
+          <Skeleton className="h-4 w-64" />
         </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-12 bg-muted animate-pulse rounded" />
+              <div key={i} className="text-center">
+                <Skeleton className="h-12 w-full mb-2" />
+                <Skeleton className="h-4 w-16 mx-auto" />
+              </div>
             ))}
+          </div>
+          <div className="border-t border-border pt-4">
+            <Skeleton className="h-5 w-24 mb-3" />
+            <div className="grid grid-cols-2 gap-2">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { MessageSquare, Star, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Plus, Star, Trash2, Search, Menu } from "lucide-react";
 import { toast } from "sonner";
 
 type Conversation = {
@@ -28,6 +30,8 @@ const ConversationSidebar = ({
 }: ConversationSidebarProps) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     loadConversations();
@@ -88,54 +92,66 @@ const ConversationSidebar = ({
     }
   };
 
-  if (loading) {
-    return (
-      <Card className="w-80 p-4 border-primary/20">
-        <div className="space-y-2">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 bg-muted animate-pulse rounded" />
-          ))}
-        </div>
-      </Card>
-    );
-  }
+  const filteredConversations = conversations.filter((conv) =>
+    conv.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  return (
-    <Card className="w-80 flex flex-col border-primary/20">
-      <div className="p-4 border-b border-border">
-        <Button onClick={onNewConversation} className="w-full">
-          <MessageSquare className="mr-2 h-4 w-4" />
-          Neue Konversation
-        </Button>
+  const sidebarContent = (
+    <>
+      <Button
+        onClick={() => {
+          onNewConversation();
+          setOpen(false);
+        }}
+        className="w-full mb-4"
+        size="lg"
+      >
+        <Plus className="mr-2 h-5 w-5" />
+        Neue Konversation
+      </Button>
+
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Suchen..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9"
+        />
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="p-2 space-y-2">
-          {conversations.length === 0 ? (
-            <div className="text-center text-muted-foreground p-4">
-              Keine Konversationen
-            </div>
+        <div className="space-y-2">
+          {filteredConversations.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              {searchQuery ? "Keine Konversationen gefunden" : "Keine Konversationen vorhanden"}
+            </p>
           ) : (
-            conversations.map((conv) => (
+            filteredConversations.map((conv) => (
               <div
                 key={conv.id}
-                className={`p-3 rounded-lg cursor-pointer hover:bg-accent transition-colors ${
-                  currentConversationId === conv.id ? "bg-accent" : ""
+                className={`p-3 rounded-lg border cursor-pointer transition-all hover:bg-accent ${
+                  currentConversationId === conv.id
+                    ? "bg-accent border-primary"
+                    : "bg-card border-border"
                 }`}
-                onClick={() => onSelectConversation(conv.id)}
+                onClick={() => {
+                  onSelectConversation(conv.id);
+                  setOpen(false);
+                }}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{conv.title}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <h3 className="font-medium text-sm truncate">{conv.title}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">
                       {new Date(conv.created_at).toLocaleDateString("de-DE")}
                     </p>
                   </div>
                   <div className="flex gap-1">
                     <Button
                       variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
+                      size="sm"
+                      className="h-8 w-8 p-0"
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleFavorite(conv.id, conv.is_favorite);
@@ -143,14 +159,14 @@ const ConversationSidebar = ({
                     >
                       <Star
                         className={`h-4 w-4 ${
-                          conv.is_favorite ? "fill-yellow-500 text-yellow-500" : ""
+                          conv.is_favorite ? "fill-yellow-400 text-yellow-400" : ""
                         }`}
                       />
                     </Button>
                     <Button
                       variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-destructive"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                       onClick={(e) => {
                         e.stopPropagation();
                         deleteConversation(conv.id);
@@ -165,7 +181,60 @@ const ConversationSidebar = ({
           )}
         </div>
       </ScrollArea>
-    </Card>
+    </>
+  );
+
+  if (loading) {
+    return (
+      <>
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="sm" className="md:hidden mb-4">
+              <Menu className="h-4 w-4 mr-2" />
+              Konversationen
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-80 p-4 flex flex-col">
+            <Skeleton className="h-10 w-full mb-4" />
+            <Skeleton className="h-10 w-full mb-4" />
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Skeleton key={i} className="h-20 w-full" />
+              ))}
+            </div>
+          </SheetContent>
+        </Sheet>
+        <div className="hidden md:flex w-80 border-r border-border bg-card p-4 flex-col space-y-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <div className="space-y-2">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-20 w-full" />
+            ))}
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          <Button variant="outline" size="sm" className="md:hidden mb-4">
+            <Menu className="h-4 w-4 mr-2" />
+            Konversationen
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-80 p-4 flex flex-col">
+          {sidebarContent}
+        </SheetContent>
+      </Sheet>
+
+      <div className="hidden md:flex w-80 border-r border-border bg-card p-4 flex-col">
+        {sidebarContent}
+      </div>
+    </>
   );
 };
 

@@ -110,14 +110,24 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
   };
 
   const exportConversation = () => {
-    const text = messages.map((m) => `${m.role.toUpperCase()}: ${m.content}`).join("\n\n");
-    const blob = new Blob([text], { type: "text/plain" });
+    let text = `# Konversation Export\n`;
+    text += `**Modul:** ${moduleTitle}\n`;
+    text += `**Datum:** ${new Date().toLocaleString("de-DE")}\n\n`;
+    text += `---\n\n`;
+    
+    messages.forEach((m) => {
+      text += `### ${m.role === "user" ? "👤 Benutzer" : "🤖 Assistent"}\n\n`;
+      text += `${m.content}\n\n`;
+      text += `---\n\n`;
+    });
+
+    const blob = new Blob([text], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${moduleTitle}_${Date.now()}.txt`;
+    a.download = `conversation-${new Date().toISOString().slice(0, 10)}.md`;
     a.click();
-    toast.success("Exportiert!");
+    toast.success("Konversation als Markdown exportiert!");
   };
 
   const shareConversation = async () => {
