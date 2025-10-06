@@ -1,4 +1,4 @@
-import { Brain, Menu, LogOut, User, Settings, Sparkles, Moon, Sun } from "lucide-react";
+import { Brain, Menu, LogOut, User, Settings, Sparkles, Moon, Sun, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 const navLinks = [
   { name: "Modules", href: "#modules" },
@@ -23,6 +24,7 @@ const Navigation = () => {
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+  const { isAdmin } = useAdminCheck();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -93,6 +95,12 @@ const Navigation = () => {
                     <Sparkles className="mr-2 h-4 w-4" />
                     Dashboard
                   </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem onClick={() => navigate("/creator-chat")} className="cursor-pointer">
+                      <Crown className="mr-2 h-4 w-4 text-yellow-500" />
+                      Creator Chat
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={() => navigate("/settings")} className="cursor-pointer">
                     <Settings className="mr-2 h-4 w-4" />
                     Einstellungen
@@ -146,6 +154,16 @@ const Navigation = () => {
                       <Sparkles className="h-4 w-4" />
                       Dashboard
                     </Button>
+                    {isAdmin && (
+                      <Button 
+                        variant="outline"
+                        onClick={() => navigate("/creator-chat")}
+                        className="flex items-center gap-2 w-full"
+                      >
+                        <Crown className="h-4 w-4 text-yellow-500" />
+                        Creator Chat
+                      </Button>
+                    )}
                     <Button 
                       variant="outline"
                       onClick={() => navigate("/settings")}

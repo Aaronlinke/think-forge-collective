@@ -7,6 +7,7 @@ import { Loader2, Send, Save, Share2, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCollectiveThink } from "@/hooks/useCollectiveThink";
+import { useCreatorChat } from "@/hooks/useCreatorChat";
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
 import ConversationSidebar from "./ConversationSidebar";
@@ -33,7 +34,12 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
   const [input, setInput] = useState("");
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const { isLoading, streamThinking } = useCollectiveThink(moduleType);
+  
+  const isCreatorMode = moduleType === "creator";
+  const collectiveThink = useCollectiveThink(moduleType);
+  const creatorChat = useCreatorChat();
+  const { isLoading, streamThinking } = isCreatorMode ? creatorChat : collectiveThink;
+  
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
