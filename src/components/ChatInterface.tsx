@@ -8,6 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCollectiveThink } from "@/hooks/useCollectiveThink";
 import { useCreatorChat } from "@/hooks/useCreatorChat";
+import { useCollectiveIntelligence } from "@/hooks/useCollectiveIntelligence";
+import CollectiveThinkingIndicator from "./CollectiveThinkingIndicator";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
 import ConversationSidebar from "./ConversationSidebar";
@@ -34,11 +38,26 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
   const [input, setInput] = useState("");
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [useCollectiveMode, setUseCollectiveMode] = useState(false);
   
   const isCreatorMode = moduleType === "creator";
   const collectiveThink = useCollectiveThink(moduleType);
   const creatorChat = useCreatorChat();
-  const { isLoading, streamThinking } = isCreatorMode ? creatorChat : collectiveThink;
+  const collectiveIntelligence = useCollectiveIntelligence(moduleType);
+  
+  const { isLoading, thinkingModules } = useCollectiveMode 
+    ? { 
+        isLoading: collectiveIntelligence.isLoading, 
+        thinkingModules: collectiveIntelligence.thinkingModules 
+      }
+    : { 
+        isLoading: (isCreatorMode ? creatorChat : collectiveThink).isLoading, 
+        thinkingModules: [] 
+      };
+  
+  const streamThinking = useCollectiveMode
+    ? collectiveIntelligence.streamCollectiveThinking
+    : (isCreatorMode ? creatorChat : collectiveThink).streamThinking;
   
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -240,7 +259,20 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
       
       <div className="flex-1 flex flex-col">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold gradient-text">{moduleTitle}</h2>
+          <div className="flex flex-col gap-2">
+            <h2 className="text-2xl font-bold gradient-text">{moduleTitle}</h2>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="collective-mode"
+                checked={useCollectiveMode}
+                onCheckedChange={setUseCollectiveMode}
+                disabled={isCreatorMode}
+              />
+              <Label htmlFor="collective-mode" className="text-sm text-muted-foreground cursor-pointer">
+                Kollektive Intelligenz {useCollectiveMode && "✨"}
+              </Label>
+            </div>
+          </div>
           <div className="flex gap-2">
             <Button variant="outline" size="icon" onClick={saveConversation} title="Speichern">
               <Save className="h-4 w-4" />
@@ -260,6 +292,9 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
               {messages.map((message) => (
                 <MessageBubble key={message.id} role={message.role} content={message.content} />
               ))}
+              {isLoading && thinkingModules.length > 0 && (
+                <CollectiveThinkingIndicator activeModules={thinkingModules} />
+              )}
               {isLoading && <TypingIndicator />}
             </div>
           </ScrollArea>
