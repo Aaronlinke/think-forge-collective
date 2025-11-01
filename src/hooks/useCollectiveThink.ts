@@ -32,13 +32,25 @@ export const useCollectiveThink = (moduleType: string) => {
         );
 
         if (!response.ok) {
-          if (response.status === 429) {
-            toast.error("Rate limit erreicht. Bitte warte kurz.");
-            throw new Error("Rate limit exceeded");
-          }
-          if (response.status === 402) {
-            toast.error("Keine Credits mehr. Bitte füge Credits hinzu.");
-            throw new Error("Payment required");
+          if (response.status === 429 || response.status === 402) {
+            toast.info("Kostenloser Offline-Modus aktiviert. Antwort wird vereinfacht generiert.");
+            const userText = messages.filter(m => m.role === "user").map(m => m.content).join("\n\n");
+            const localResponse =
+              `Modul: ${moduleType}\n\n` +
+              "Fokus:\n- Kurz, pragmatisch, kostenfrei generiert\n\n" +
+              "Ansatz:\n" +
+              "1) Problem klären\n" +
+              "2) Kernlösung skizzieren\n" +
+              "3) Risiken/Nächste Schritte benennen\n\n" +
+              "Skizze:\n- " + (userText.slice(0, 160) || "Kein Kontext");
+            const chunks = localResponse.match(/.{1,80}(\s|$)/g) || [localResponse];
+            for (const ch of chunks) {
+              onDelta(ch);
+              setCurrentResponse(prev => prev + ch);
+              await new Promise(r => setTimeout(r, 12));
+            }
+            onDone();
+            return;
           }
           throw new Error("Failed to stream response");
         }

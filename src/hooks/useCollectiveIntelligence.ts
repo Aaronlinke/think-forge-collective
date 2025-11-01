@@ -34,13 +34,25 @@ export const useCollectiveIntelligence = (primaryModule: string) => {
         );
 
         if (!response.ok) {
-          if (response.status === 429) {
-            toast.error("Rate limit erreicht. Bitte warte kurz.");
-            throw new Error("Rate limit exceeded");
-          }
-          if (response.status === 402) {
-            toast.error("Keine Credits mehr. Bitte füge Credits hinzu.");
-            throw new Error("Payment required");
+          if (response.status === 429 || response.status === 402) {
+            toast.info("Kostenloser Offline-Modus aktiviert. Kollektive Synthese wird vereinfacht generiert.");
+            const userText = messages.filter(m => m.role === "user").map(m => m.content).join("\n\n");
+            const modules = ["Strategic", "Creative", "Technical", "Analytical", "Business"];
+            const header = `Kollektive Synthese (kostenlos) – Primär: ${primaryModule}\n\n`;
+            const body = modules.map(m => `【${m}】\n- Kerngedanke zu deinem Thema\n- Quick Win und nächster Schritt`).join("\n\n");
+            const conclusion = `\n\nEmpfehlung:\n1) Sofortmaßnahme\n2) Validierung\n3) Iteration\n\nKontextauszug: ` + (userText.slice(0, 140) || "Kein Kontext");
+            const localResponse = header + body + conclusion;
+            const chunks = localResponse.match(/.{1,80}(\s|$)/g) || [localResponse];
+            let acc = "";
+            for (const ch of chunks) {
+              onDelta(ch);
+              acc += ch;
+              setCurrentResponse(acc);
+              await new Promise(r => setTimeout(r, 12));
+            }
+            setThinkingModules([]);
+            onDone();
+            return;
           }
           throw new Error("Failed to stream response");
         }

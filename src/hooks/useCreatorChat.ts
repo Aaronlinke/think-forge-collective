@@ -34,15 +34,28 @@ export const useCreatorChat = () => {
         if (!response.ok) {
           if (response.status === 403) {
             toast.error("Nur für Admins zugänglich.");
-            throw new Error("Forbidden");
+            onDone();
+            return;
           }
-          if (response.status === 429) {
-            toast.error("Rate limit erreicht. Bitte warte kurz.");
-            throw new Error("Rate limit exceeded");
-          }
-          if (response.status === 402) {
-            toast.error("Keine Credits mehr. Bitte füge Credits hinzu.");
-            throw new Error("Payment required");
+          if (response.status === 429 || response.status === 402) {
+            toast.info("Kostenloser Offline-Modus aktiviert. Antwort wird vereinfacht generiert.");
+            const userText = messages.filter(m => m.role === "user").map(m => m.content).join("\n\n");
+            const localResponse =
+              "Kostenloser Modus – vereinfachte Antwort\n\n" +
+              "Kurz-Zusammenfassung:\n- " + (userText.slice(0, 120) || "Kein Kontext") + "\n\n" +
+              "Lösungsvorschlag:\n" +
+              "1) Definiere Ziel und Constraints klar.\n" +
+              "2) Skizziere 3 Schritte zur Umsetzung.\n" +
+              "3) Prüfe Risiken und nächste Schritte.\n\n" +
+              "Nächste Schritte:\n- Schritt 1: Sofort starten\n- Schritt 2: Validieren\n- Schritt 3: Iterieren";
+            const chunks = localResponse.match(/.{1,80}(\s|$)/g) || [localResponse];
+            for (const ch of chunks) {
+              onDelta(ch);
+              setCurrentResponse(prev => prev + ch);
+              await new Promise(r => setTimeout(r, 12));
+            }
+            onDone();
+            return;
           }
           throw new Error("Failed to stream response");
         }
