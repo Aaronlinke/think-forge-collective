@@ -19,6 +19,29 @@ export const useCollectiveIntelligence = (primaryModule: string) => {
       setThinkingModules(["strategic", "creative", "technical", "analytical", "business"]);
 
       try {
+        const forceFreeMode = localStorage.getItem("forceFreeMode") === "true";
+        
+        if (forceFreeMode) {
+          toast.info("Kostenloser Offline-Modus (dauerhaft aktiviert in Einstellungen)");
+          const userText = messages.filter(m => m.role === "user").map(m => m.content).join("\n\n");
+          const modules = ["Strategic", "Creative", "Technical", "Analytical", "Business"];
+          const header = `Kollektive Synthese (kostenlos) – Primär: ${primaryModule}\n\n`;
+          const body = modules.map(m => `【${m}】\n- Kerngedanke zu deinem Thema\n- Quick Win und nächster Schritt`).join("\n\n");
+          const conclusion = `\n\nEmpfehlung:\n1) Sofortmaßnahme\n2) Validierung\n3) Iteration\n\nKontextauszug: ` + (userText.slice(0, 140) || "Kein Kontext");
+          const localResponse = header + body + conclusion;
+          const chunks = localResponse.match(/.{1,80}(\s|$)/g) || [localResponse];
+          let acc = "";
+          for (const ch of chunks) {
+            onDelta(ch);
+            acc += ch;
+            setCurrentResponse(acc);
+            await new Promise(r => setTimeout(r, 12));
+          }
+          setThinkingModules([]);
+          onDone();
+          return;
+        }
+
         const { data: { session } } = await supabase.auth.getSession();
         
         const response = await fetch(

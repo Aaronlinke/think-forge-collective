@@ -17,6 +17,29 @@ export const useCollectiveThink = (moduleType: string) => {
       setCurrentResponse("");
 
       try {
+        const forceFreeMode = localStorage.getItem("forceFreeMode") === "true";
+        
+        if (forceFreeMode) {
+          toast.info("Kostenloser Offline-Modus (dauerhaft aktiviert in Einstellungen)");
+          const userText = messages.filter(m => m.role === "user").map(m => m.content).join("\n\n");
+          const localResponse =
+            `Modul: ${moduleType}\n\n` +
+            "Fokus:\n- Kurz, pragmatisch, kostenfrei generiert\n\n" +
+            "Ansatz:\n" +
+            "1) Problem klären\n" +
+            "2) Kernlösung skizzieren\n" +
+            "3) Risiken/Nächste Schritte benennen\n\n" +
+            "Skizze:\n- " + (userText.slice(0, 160) || "Kein Kontext");
+          const chunks = localResponse.match(/.{1,80}(\s|$)/g) || [localResponse];
+          for (const ch of chunks) {
+            onDelta(ch);
+            setCurrentResponse(prev => prev + ch);
+            await new Promise(r => setTimeout(r, 12));
+          }
+          onDone();
+          return;
+        }
+
         const { data: { session } } = await supabase.auth.getSession();
         
         const response = await fetch(

@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { User, Mail, KeyRound } from "lucide-react";
+import { User, Mail, KeyRound, Sparkles } from "lucide-react";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -15,6 +16,9 @@ const Settings = () => {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [saving, setSaving] = useState(false);
+  const [forceFreeMode, setForceFreeMode] = useState(() => {
+    return localStorage.getItem("forceFreeMode") === "true";
+  });
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -123,6 +127,37 @@ const Settings = () => {
               <Button onClick={handleSaveProfile} disabled={saving} className="w-full">
                 {saving ? "Wird gespeichert..." : "Profil speichern"}
               </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5" />
+                KI-Einstellungen
+              </CardTitle>
+              <CardDescription>Steuere das Verhalten der KI-Module</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="free-mode" className="text-base">
+                    Immer kostenloser Modus
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Nutze vereinfachte lokale Antworten ohne API-Credits
+                  </p>
+                </div>
+                <Switch
+                  id="free-mode"
+                  checked={forceFreeMode}
+                  onCheckedChange={(checked) => {
+                    setForceFreeMode(checked);
+                    localStorage.setItem("forceFreeMode", String(checked));
+                    toast.success(checked ? "Kostenloser Modus aktiviert" : "Normaler Modus aktiviert");
+                  }}
+                />
+              </div>
             </CardContent>
           </Card>
 
