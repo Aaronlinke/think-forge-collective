@@ -18,6 +18,7 @@ import BlackSultanOS from "./pages/BlackSultanOS";
 import CollectiveMind from "./pages/CollectiveMind";
 import SolutionForge from "./pages/SolutionForge";
 import CreatorChat from "./pages/CreatorChat";
+import UsageDashboard from "./pages/UsageDashboard";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/usage" element={<UsageDashboard />} />
             <Route path="/shared/:token" element={<SharedConversation />} />
             <Route path="/app-creator" element={<AppCreator />} />
             <Route path="/ai-ecosystem" element={<AIEcosystem />} />

@@ -9,9 +9,17 @@ import { toast } from "sonner";
 import { useCollectiveThink } from "@/hooks/useCollectiveThink";
 import { useCreatorChat } from "@/hooks/useCreatorChat";
 import { useCollectiveIntelligence } from "@/hooks/useCollectiveIntelligence";
+import { useAdvancedModes } from "@/hooks/useAdvancedModes";
 import CollectiveThinkingIndicator from "./CollectiveThinkingIndicator";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
 import ConversationSidebar from "./ConversationSidebar";
@@ -39,24 +47,33 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [useCollectiveMode, setUseCollectiveMode] = useState(false);
+  const [advancedMode, setAdvancedMode] = useState<"standard" | "debate" | "deep-research" | "rapid">("standard");
   
   const isCreatorMode = moduleType === "creator";
   const collectiveThink = useCollectiveThink(moduleType);
   const creatorChat = useCreatorChat();
   const collectiveIntelligence = useCollectiveIntelligence(moduleType);
+  const advancedModes = useAdvancedModes(moduleType, advancedMode);
   
   const { isLoading, thinkingModules } = useCollectiveMode 
-    ? { 
-        isLoading: collectiveIntelligence.isLoading, 
-        thinkingModules: collectiveIntelligence.thinkingModules 
-      }
+    ? (advancedMode !== "standard" 
+        ? {
+            isLoading: advancedModes.isLoading,
+            thinkingModules: advancedModes.thinkingModules
+          }
+        : { 
+            isLoading: collectiveIntelligence.isLoading, 
+            thinkingModules: collectiveIntelligence.thinkingModules 
+          })
     : { 
         isLoading: (isCreatorMode ? creatorChat : collectiveThink).isLoading, 
         thinkingModules: [] 
       };
   
   const streamThinking = useCollectiveMode
-    ? collectiveIntelligence.streamCollectiveThinking
+    ? (advancedMode !== "standard" 
+        ? advancedModes.streamAdvancedThinking
+        : collectiveIntelligence.streamCollectiveThinking)
     : (isCreatorMode ? creatorChat : collectiveThink).streamThinking;
   
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -92,14 +109,15 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
     }
   };
 
-  const saveConversation = async () => {
+  const autoSaveConversation = async () => {
     if (messages.length === 0) return;
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+      if (!user) return;
 
       const title = messages[0]?.content.slice(0, 50) || "Neue Unterhaltung";
+      const collectiveMode = useCollectiveMode ? "collective" : "standard";
 
       let convId = currentConversationId;
 
@@ -110,6 +128,7 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
             user_id: user.id,
             module_type: moduleType,
             title,
+            collective_mode: collectiveMode,
           })
           .select()
           .single();
@@ -117,21 +136,37 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
         if (error) throw error;
         convId = data.id;
         setCurrentConversationId(convId);
+      } else {
+        // Update collective_mode if changed
+        await supabase
+          .from("conversations")
+          .update({ collective_mode: collectiveMode })
+          .eq("id", convId);
       }
 
-      for (const msg of messages) {
+      // Only save new messages
+      const existingCount = await supabase
+        .from("messages")
+        .select("id", { count: "exact" })
+        .eq("conversation_id", convId);
+
+      const newMessages = messages.slice(existingCount.count || 0);
+      
+      for (const msg of newMessages) {
         await supabase.from("messages").insert({
           conversation_id: convId,
           role: msg.role,
           content: msg.content,
         });
       }
-
-      toast.success("Unterhaltung gespeichert!");
     } catch (error) {
-      console.error("Error saving conversation:", error);
-      toast.error("Fehler beim Speichern");
+      console.error("Error auto-saving conversation:", error);
     }
+  };
+
+  const saveConversation = async () => {
+    await autoSaveConversation();
+    toast.success("Unterhaltung gespeichert!");
   };
 
   const exportConversation = () => {
@@ -209,9 +244,11 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
           return updated;
         });
       },
-      () => {
+      async () => {
         // Update user stats
-        updateUserStats();
+        await updateUserStats();
+        // Auto-save conversation after AI response
+        await autoSaveConversation();
       }
     );
   };
@@ -261,16 +298,31 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
         <div className="flex justify-between items-center mb-4">
           <div className="flex flex-col gap-2">
             <h2 className="text-2xl font-bold gradient-text">{moduleTitle}</h2>
-            <div className="flex items-center gap-2">
-              <Switch
-                id="collective-mode"
-                checked={useCollectiveMode}
-                onCheckedChange={setUseCollectiveMode}
-                disabled={isCreatorMode}
-              />
-              <Label htmlFor="collective-mode" className="text-sm text-muted-foreground cursor-pointer">
-                Kollektive Intelligenz {useCollectiveMode && "✨"}
-              </Label>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="collective-mode"
+                  checked={useCollectiveMode}
+                  onCheckedChange={setUseCollectiveMode}
+                  disabled={isCreatorMode}
+                />
+                <Label htmlFor="collective-mode" className="text-sm text-muted-foreground cursor-pointer">
+                  Kollektive Intelligenz {useCollectiveMode && "✨"}
+                </Label>
+              </div>
+              {useCollectiveMode && (
+                <Select value={advancedMode} onValueChange={(v: any) => setAdvancedMode(v)}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="standard">Standard</SelectItem>
+                    <SelectItem value="debate">🔥 Debate Mode</SelectItem>
+                    <SelectItem value="deep-research">🔬 Deep Research</SelectItem>
+                    <SelectItem value="rapid">⚡ Rapid Mode</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
           <div className="flex gap-2">

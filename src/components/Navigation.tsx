@@ -1,4 +1,4 @@
-import { Brain, Menu, LogOut, User, Settings, Sparkles, Moon, Sun, Crown } from "lucide-react";
+import { Brain, Menu, LogOut, User, Settings, Sparkles, Moon, Sun, Crown, BarChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -95,6 +95,10 @@ const Navigation = () => {
                     <Sparkles className="mr-2 h-4 w-4" />
                     Dashboard
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/usage")} className="cursor-pointer">
+                    <BarChart className="mr-2 h-4 w-4" />
+                    Statistiken
+                  </DropdownMenuItem>
                   {isAdmin && (
                     <DropdownMenuItem onClick={() => navigate("/creator-chat")} className="cursor-pointer">
                       <Crown className="mr-2 h-4 w-4 text-yellow-500" />
@@ -153,6 +157,14 @@ const Navigation = () => {
                     >
                       <Sparkles className="h-4 w-4" />
                       Dashboard
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate("/usage")}
+                      className="flex items-center gap-2 w-full"
+                    >
+                      <BarChart className="h-4 w-4" />
+                      Statistiken
                     </Button>
                     {isAdmin && (
                       <Button 

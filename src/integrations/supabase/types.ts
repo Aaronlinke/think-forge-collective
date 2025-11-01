@@ -14,8 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversation_branches: {
+        Row: {
+          branch_name: string
+          conversation_id: string
+          created_at: string | null
+          id: string
+          parent_message_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          branch_name: string
+          conversation_id: string
+          created_at?: string | null
+          id?: string
+          parent_message_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          branch_name?: string
+          conversation_id?: string
+          created_at?: string | null
+          id?: string
+          parent_message_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_branches_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_branches_parent_message_id_fkey"
+            columns: ["parent_message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
+          collective_mode: string | null
           created_at: string
           id: string
           is_favorite: boolean | null
@@ -27,6 +70,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          collective_mode?: string | null
           created_at?: string
           id?: string
           is_favorite?: boolean | null
@@ -38,6 +82,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          collective_mode?: string | null
           created_at?: string
           id?: string
           is_favorite?: boolean | null
@@ -67,6 +112,7 @@ export type Database = {
       }
       messages: {
         Row: {
+          branch_id: string | null
           content: string
           conversation_id: string
           created_at: string
@@ -74,6 +120,7 @@ export type Database = {
           role: string
         }
         Insert: {
+          branch_id?: string | null
           content: string
           conversation_id: string
           created_at?: string
@@ -81,6 +128,7 @@ export type Database = {
           role: string
         }
         Update: {
+          branch_id?: string | null
           content?: string
           conversation_id?: string
           created_at?: string
@@ -88,6 +136,13 @@ export type Database = {
           role?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "messages_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_branches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "messages_conversation_id_fkey"
             columns: ["conversation_id"]
