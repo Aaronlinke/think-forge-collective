@@ -8,3 +8,6 @@ verify_jwt = true
 
 [functions.collective-intelligence]
 verify_jwt = false
+
+[functions.update-user-stats]
+verify_jwt = true

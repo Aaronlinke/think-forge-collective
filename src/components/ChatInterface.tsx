@@ -254,29 +254,30 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
   };
 
   const updateUserStats = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
 
-    const { data: stats } = await supabase
-      .from("user_stats")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
+      const response = await fetch(
+        `https://cyzgmlgbpbcyomlkvrrm.supabase.co/functions/v1/update-user-stats`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ moduleType }),
+        }
+      );
 
-    if (stats) {
-      const today = new Date().toISOString().split("T")[0];
-      const lastDate = stats.last_thought_date;
-      const isConsecutive = lastDate === new Date(Date.now() - 86400000).toISOString().split("T")[0];
-
-      await supabase
-        .from("user_stats")
-        .update({
-          total_thoughts: stats.total_thoughts + 1,
-          current_streak: isConsecutive ? stats.current_streak + 1 : 1,
-          longest_streak: Math.max(stats.longest_streak, isConsecutive ? stats.current_streak + 1 : 1),
-          last_thought_date: today,
-        })
-        .eq("user_id", user.id);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.stats?.earned_new_badge) {
+          toast.success("🎉 Neues Badge erhalten!");
+        }
+      }
+    } catch (error) {
+      console.error("Error updating stats:", error);
     }
   };
 
