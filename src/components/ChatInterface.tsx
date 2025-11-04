@@ -10,6 +10,7 @@ import { useCollectiveThink } from "@/hooks/useCollectiveThink";
 import { useCreatorChat } from "@/hooks/useCreatorChat";
 import { useCollectiveIntelligence } from "@/hooks/useCollectiveIntelligence";
 import { useAdvancedModes } from "@/hooks/useAdvancedModes";
+import { useConversationBranching } from "@/hooks/useConversationBranching";
 import CollectiveThinkingIndicator from "./CollectiveThinkingIndicator";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -23,6 +24,7 @@ import {
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
 import ConversationSidebar from "./ConversationSidebar";
+import { BranchSelector } from "./BranchSelector";
 
 type Message = {
   role: "user" | "assistant";
@@ -48,6 +50,8 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [useCollectiveMode, setUseCollectiveMode] = useState(false);
   const [advancedMode, setAdvancedMode] = useState<"standard" | "debate" | "deep-research" | "rapid">("standard");
+  
+  const branching = useConversationBranching(currentConversationId);
   
   const isCreatorMode = moduleType === "creator";
   const collectiveThink = useCollectiveThink(moduleType);
@@ -87,11 +91,18 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
 
   const loadConversation = async (convId: string) => {
     try {
-      const { data: messagesData, error } = await supabase
+      let query = supabase
         .from("messages")
         .select("*")
-        .eq("conversation_id", convId)
-        .order("created_at", { ascending: true });
+        .eq("conversation_id", convId);
+
+      if (branching.currentBranchId) {
+        query = query.eq("branch_id", branching.currentBranchId);
+      } else {
+        query = query.is("branch_id", null);
+      }
+
+      const { data: messagesData, error } = await query.order("created_at", { ascending: true });
 
       if (error) throw error;
 
@@ -108,6 +119,14 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
       toast.error("Fehler beim Laden der Konversation");
     }
   };
+
+  // Reload messages when branch changes
+  useEffect(() => {
+    if (currentConversationId) {
+      loadConversation(currentConversationId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [branching.currentBranchId]);
 
   const autoSaveConversation = async () => {
     if (messages.length === 0) return;
@@ -157,6 +176,7 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
           conversation_id: convId,
           role: msg.role,
           content: msg.content,
+          branch_id: branching.currentBranchId,
         });
       }
     } catch (error) {
@@ -286,6 +306,17 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
     setCurrentConversationId(null);
   };
 
+  const handleCreateBranch = async (messageId: string) => {
+    const branchId = await branching.createBranch(messageId);
+    if (branchId && currentConversationId) {
+      // Load messages up to the branch point
+      const messageIndex = messages.findIndex((m) => m.id === messageId);
+      if (messageIndex !== -1) {
+        setMessages(messages.slice(0, messageIndex + 1));
+      }
+    }
+  };
+
   return (
     <div className="flex gap-4 h-full">
       <ConversationSidebar
@@ -326,7 +357,16 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
               )}
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {currentConversationId && branching.branches.length > 0 && (
+              <BranchSelector
+                branches={branching.branches}
+                currentBranchId={branching.currentBranchId}
+                onSwitchBranch={branching.switchBranch}
+                onDeleteBranch={branching.deleteBranch}
+                onRenameBranch={branching.renameBranch}
+              />
+            )}
             <Button variant="outline" size="icon" onClick={saveConversation} title="Speichern">
               <Save className="h-4 w-4" />
             </Button>
@@ -343,7 +383,13 @@ const ChatInterface = ({ moduleType, moduleTitle }: ChatInterfaceProps) => {
           <ScrollArea className="flex-1 p-4" ref={scrollRef}>
             <div className="space-y-4">
               {messages.map((message) => (
-                <MessageBubble key={message.id} role={message.role} content={message.content} />
+                <MessageBubble 
+                  key={message.id} 
+                  role={message.role} 
+                  content={message.content}
+                  messageId={message.id}
+                  onCreateBranch={currentConversationId ? handleCreateBranch : undefined}
+                />
               ))}
               {isLoading && thinkingModules.length > 0 && (
                 <CollectiveThinkingIndicator activeModules={thinkingModules} />

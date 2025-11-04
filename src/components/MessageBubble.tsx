@@ -5,15 +5,17 @@ import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import remarkGfm from "remark-gfm";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, GitBranch } from "lucide-react";
 import { toast } from "sonner";
 
 type MessageBubbleProps = {
   role: "user" | "assistant";
   content: string;
+  messageId?: string;
+  onCreateBranch?: (messageId: string) => void;
 };
 
-const MessageBubble = ({ role, content }: MessageBubbleProps) => {
+const MessageBubble = ({ role, content, messageId, onCreateBranch }: MessageBubbleProps) => {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const copyToClipboard = async (text: string) => {
@@ -34,8 +36,8 @@ const MessageBubble = ({ role, content }: MessageBubbleProps) => {
   }
 
   return (
-    <div className="flex justify-start">
-      <Card className="max-w-[80%] rounded-lg p-4 bg-muted">
+    <div className="flex justify-start group">
+      <Card className="max-w-[80%] rounded-lg p-4 bg-muted relative">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={{
@@ -91,6 +93,17 @@ const MessageBubble = ({ role, content }: MessageBubbleProps) => {
         >
           {content}
         </ReactMarkdown>
+        {messageId && onCreateBranch && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute -right-2 -top-2 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={() => onCreateBranch(messageId)}
+            title="Branch von dieser Nachricht erstellen"
+          >
+            <GitBranch className="w-4 h-4" />
+          </Button>
+        )}
       </Card>
     </div>
   );
