@@ -99,13 +99,48 @@ export const useAdvancedModes = (primaryModule: string, mode: AdvancedMode = "st
 
         if (!response.ok) {
           if (response.status === 429 || response.status === 402) {
-            toast.info("Kostenloser Offline-Modus aktiviert.");
+            const modeLabels = {
+              "debate": "Debatte-Modus",
+              "deep-research": "Tiefenanalyse-Modus",
+              "rapid": "Schnell-Modus",
+              "standard": "Standard-Modus"
+            };
+            toast.info(`Kostenloser Offline-Modus aktiviert (${modeLabels[mode]})`);
+            
             const userText = messages.filter(m => m.role === "user").map(m => m.content).join("\n\n");
-            const localResponse = `Modus: ${mode}\nKostenfreie Antwort\n\n` + (userText.slice(0, 200) || "Kein Kontext");
+            const header = `Kollektive Synthese (${modeLabels[mode]}) – Kostenlose Version\n\n`;
+            
+            let body = "";
+            if (mode === "debate") {
+              body = config.modules.map(m => 
+                `【${m.charAt(0).toUpperCase() + m.slice(1)}】\n**Position:** [Hier würde ${m} eine klare Pro/Contra-Position vertreten]\n**Kernargument:** Basierend auf der ${m} Perspektive\n`
+              ).join("\n");
+              body += `\n**Synthese:** In einer echten Debatte würden diese Module kontroverse Positionen diskutieren und zu einer ausgewogenen Schlussfolgerung kommen.`;
+            } else if (mode === "deep-research") {
+              body = config.modules.map(m => 
+                `【${m.charAt(0).toUpperCase() + m.slice(1)}】\n**Iteration 1:** Erste Analyse aus ${m} Sicht\n**Iteration 2:** Verfeinerte Perspektive basierend auf anderen Modulen\n`
+              ).join("\n");
+              body += `\n**Tiefenanalyse:** In mehreren Iterationen würden die Module ihre Erkenntnisse verfeinern und zu einer umfassenden Lösung kommen.`;
+            } else if (mode === "rapid") {
+              body = config.modules.map(m => 
+                `【${m.charAt(0).toUpperCase() + m.slice(1)}】 Kernpunkt zum Thema in max 2 Sätzen`
+              ).join("\n");
+              body += `\n\n**Schnelle Empfehlung:** Die wichtigste Sofortmaßnahme würde hier stehen.`;
+            } else {
+              body = config.modules.map(m => 
+                `【${m.charAt(0).toUpperCase() + m.slice(1)}】\n- Kerngedanke zu deinem Thema\n- Spezifische Perspektive\n- Umsetzungsempfehlung\n`
+              ).join("\n");
+            }
+            
+            const conclusion = `\n\n**Gesamtempfehlung:**\n1) Hauptmaßnahme basierend auf kollektiver Analyse\n2) Alternative Ansätze\n3) Nächste konkrete Schritte\n\n**Hinweis:** Dies ist eine vereinfachte Offline-Version. Für die vollständige kollektive Intelligenz mit ${config.modules.length} Modulen ${"iterations" in config && config.iterations && config.iterations > 1 ? `und ${config.iterations} Iterationen ` : ""}benötigst du eine Verbindung.\n\n*Kontext:* ${userText.slice(0, 150)}...`;
+            
+            const localResponse = header + body + conclusion;
             const chunks = localResponse.match(/.{1,80}(\s|$)/g) || [localResponse];
+            let acc = "";
             for (const ch of chunks) {
               onDelta(ch);
-              setCurrentResponse(prev => prev + ch);
+              acc += ch;
+              setCurrentResponse(acc);
               await new Promise(r => setTimeout(r, 12));
             }
             setThinkingModules([]);
