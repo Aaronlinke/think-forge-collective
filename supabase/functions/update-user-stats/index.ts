@@ -32,20 +32,33 @@ serve(async (req) => {
       });
     }
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+    // Extract JWT token and decode to get user_id
+    const token = authHeader.replace("Bearer ", "");
+    const parts = token.split(".");
+    if (parts.length !== 3) {
+      return new Response(JSON.stringify({ error: "Invalid token format" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Decode JWT payload (base64url)
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+    const userId = payload.sub;
+
+    if (!userId) {
+      return new Response(JSON.stringify({ error: "No user ID in token" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Create Supabase client with service role for database operations
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
 
     const { moduleType } = await req.json();
 
@@ -53,7 +66,7 @@ serve(async (req) => {
     const { data: currentStats, error: fetchError } = await supabaseClient
       .from("user_stats")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .single();
 
     if (fetchError && fetchError.code !== "PGRST116") {
@@ -111,7 +124,7 @@ serve(async (req) => {
     const { error: updateError } = await supabaseClient
       .from("user_stats")
       .upsert({
-        user_id: user.id,
+        user_id: userId,
         total_thoughts: newTotalThoughts,
         current_streak: currentStreak,
         longest_streak: longestStreak,
@@ -129,7 +142,7 @@ serve(async (req) => {
     const newBadgeCount = newBadges.length;
     const earnedNewBadge = newBadgeCount > previousBadgeCount;
 
-    console.log(`Stats updated for user ${user.id}: thoughts=${newTotalThoughts}, streak=${currentStreak}, badges=${newBadges.length}`);
+    console.log(`Stats updated for user ${userId}: thoughts=${newTotalThoughts}, streak=${currentStreak}, badges=${newBadges.length}`);
 
     return new Response(
       JSON.stringify({
