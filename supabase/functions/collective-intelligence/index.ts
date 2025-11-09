@@ -199,6 +199,16 @@ Gib eine vollständige, durchdachte Antwort auf Deutsch, die die kollektive Inte
 
     if (!synthesisResponse.ok) {
       console.error("Synthesis error:", synthesisResponse.status);
+      
+      // Pass through rate limit and payment errors to client for proper handling
+      if (synthesisResponse.status === 429 || synthesisResponse.status === 402) {
+        const errorText = await synthesisResponse.text();
+        return new Response(JSON.stringify({ error: errorText || "Rate limit exceeded" }), {
+          status: synthesisResponse.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      
       return new Response(JSON.stringify({ error: "Synthesis failed" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
