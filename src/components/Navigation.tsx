@@ -1,4 +1,4 @@
-import { Brain, Menu, LogOut, User, Settings, Sparkles, Moon, Sun, Crown, BarChart } from "lucide-react";
+import { Brain, Menu, LogOut, User, Settings, Sparkles, Moon, Sun, Crown, BarChart, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -99,6 +99,10 @@ const Navigation = () => {
                     <BarChart className="mr-2 h-4 w-4" />
                     Statistiken
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/guided-browser")} className="cursor-pointer">
+                    <Globe className="mr-2 h-4 w-4" />
+                    Guided Browser
+                  </DropdownMenuItem>
                   {isAdmin && (
                     <DropdownMenuItem onClick={() => navigate("/creator-chat")} className="cursor-pointer">
                       <Crown className="mr-2 h-4 w-4 text-yellow-500" />
@@ -165,6 +169,14 @@ const Navigation = () => {
                     >
                       <BarChart className="h-4 w-4" />
                       Statistiken
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate("/guided-browser")}
+                      className="flex items-center gap-2 w-full"
+                    >
+                      <Globe className="h-4 w-4" />
+                      Guided Browser
                     </Button>
                     {isAdmin && (
                       <Button 

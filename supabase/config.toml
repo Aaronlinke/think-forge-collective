@@ -11,3 +11,9 @@ verify_jwt = false
 
 [functions.update-user-stats]
 verify_jwt = true
+
+[functions.browser-bridge]
+verify_jwt = false
+
+[functions.analyze-screenshot]
+verify_jwt = false

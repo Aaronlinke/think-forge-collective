@@ -19,6 +19,7 @@ import CollectiveMind from "./pages/CollectiveMind";
 import SolutionForge from "./pages/SolutionForge";
 import CreatorChat from "./pages/CreatorChat";
 import UsageDashboard from "./pages/UsageDashboard";
+import GuidedBrowser from "./pages/GuidedBrowser";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/collective-mind" element={<CollectiveMind />} />
             <Route path="/solution-forge" element={<SolutionForge />} />
             <Route path="/creator-chat" element={<CreatorChat />} />
+            <Route path="/guided-browser" element={<GuidedBrowser />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
