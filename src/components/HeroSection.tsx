@@ -1,67 +1,107 @@
-import { Brain, Lightbulb, Network } from "lucide-react";
+import { ArrowRight, Sparkles, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const HeroSection = () => {
   return (
-    <section className="relative overflow-hidden py-20 px-4">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10 opacity-50" />
+    <section className="relative overflow-hidden py-32 px-4">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[120px] animate-pulse-ring" />
+        <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-[120px] animate-pulse-ring" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-secondary/10 rounded-full blur-[150px] animate-rotate" />
+      </div>
       
-      <div className="container mx-auto max-w-6xl relative z-10">
-        <div className="text-center space-y-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card/50 backdrop-blur-sm border border-primary/20">
-            <Brain className="h-4 w-4 text-primary animate-pulse" />
-            <span className="text-sm text-muted-foreground">Collective Intelligence Platform</span>
+      <div className="container mx-auto max-w-7xl relative z-10">
+        <div className="text-center space-y-12">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full glass-card border border-primary/30 animate-fade-in">
+            <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+            <span className="text-sm font-medium bg-gradient-primary bg-clip-text text-transparent">
+              Kollektive Intelligenz · Neue Generation
+            </span>
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-black tracking-tight">
-            <span className="gradient-text">Think Forge</span>
-            <br />
-            <span className="text-foreground">Collective</span>
-          </h1>
+          {/* Main heading */}
+          <div className="space-y-6 animate-scale-in">
+            <h1 className="text-6xl md:text-8xl font-black tracking-tight leading-none">
+              <span className="gradient-text-animated block mb-4">Think Forge</span>
+              <span className="text-foreground/90">Collective</span>
+            </h1>
+            
+            <p className="text-xl md:text-3xl text-muted-foreground max-w-4xl mx-auto leading-relaxed font-light">
+              Von <span className="text-primary font-bold">10.000 Möglichkeiten</span> zur{" "}
+              <span className="text-accent font-bold">perfekten Lösung</span>
+              <br />
+              <span className="text-lg md:text-xl mt-4 block opacity-80">
+                Wo kollektive Intelligenz auf Innovation trifft
+              </span>
+            </p>
+          </div>
 
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Jeder Gedanke öffnet <span className="text-primary font-semibold">10.000 Möglichkeiten</span>.
-            <br />
-            Kollektive Intelligenz findet <span className="text-accent font-semibold">die eine Lösung</span>.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
+          {/* CTA buttons */}
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center pt-8 animate-fade-in-up">
             <Button 
               size="lg" 
-              className="bg-gradient-primary hover:opacity-90 transition-all duration-300 shadow-glow-primary text-lg px-8 py-6 rounded-xl font-semibold"
+              className="group relative bg-gradient-primary hover:opacity-90 transition-all duration-300 shadow-neon text-xl px-12 py-8 rounded-2xl font-bold overflow-hidden"
             >
-              <Lightbulb className="mr-2 h-5 w-5" />
-              Start Thinking
+              <span className="relative z-10 flex items-center">
+                <Zap className="mr-3 h-6 w-6 group-hover:rotate-12 transition-transform" />
+                Jetzt Starten
+              </span>
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
             </Button>
+            
             <Button 
               size="lg" 
               variant="outline"
-              className="border-primary/50 hover:bg-primary/10 transition-all duration-300 text-lg px-8 py-6 rounded-xl font-semibold"
+              className="neon-border border-2 hover:bg-muted/30 transition-all duration-300 text-xl px-12 py-8 rounded-2xl font-bold"
             >
-              <Network className="mr-2 h-5 w-5" />
-              Explore Modules
+              <Sparkles className="mr-3 h-6 w-6" />
+              Module Entdecken
+              <ArrowRight className="ml-3 h-6 w-6" />
             </Button>
           </div>
 
-          <div className="grid grid-cols-3 gap-8 max-w-3xl mx-auto pt-12">
-            <div className="text-center space-y-2">
-              <div className="text-4xl font-bold text-primary">10K+</div>
-              <div className="text-sm text-muted-foreground">Möglichkeiten</div>
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto pt-20 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+            <div className="stat-card group glass-card p-8 rounded-3xl hover:shadow-glow-primary transition-all duration-500 cursor-pointer">
+              <div className="text-5xl md:text-6xl font-black bg-gradient-primary bg-clip-text text-transparent mb-3">
+                10K+
+              </div>
+              <div className="text-lg font-semibold text-foreground/80">
+                Möglichkeiten
+              </div>
+              <div className="text-sm text-muted-foreground mt-2">
+                pro Anfrage generiert
+              </div>
             </div>
-            <div className="text-center space-y-2">
-              <div className="text-4xl font-bold text-accent">∞</div>
-              <div className="text-sm text-muted-foreground">Perspektiven</div>
+            
+            <div className="stat-card group glass-card p-8 rounded-3xl hover:shadow-glow-accent transition-all duration-500 cursor-pointer">
+              <div className="text-5xl md:text-6xl font-black bg-gradient-accent bg-clip-text text-transparent mb-3">
+                ∞
+              </div>
+              <div className="text-lg font-semibold text-foreground/80">
+                Perspektiven
+              </div>
+              <div className="text-sm text-muted-foreground mt-2">
+                unbegrenzte Denkansätze
+              </div>
             </div>
-            <div className="text-center space-y-2">
-              <div className="text-4xl font-bold text-success">1</div>
-              <div className="text-sm text-muted-foreground">Optimale Lösung</div>
+            
+            <div className="stat-card group glass-card p-8 rounded-3xl hover:shadow-glow-success transition-all duration-500 cursor-pointer">
+              <div className="text-5xl md:text-6xl font-black text-success mb-3">
+                1
+              </div>
+              <div className="text-lg font-semibold text-foreground/80">
+                Optimale Lösung
+              </div>
+              <div className="text-sm text-muted-foreground mt-2">
+                präzise & KI-validiert
+              </div>
             </div>
           </div>
         </div>
       </div>
-
-      <div className="absolute top-1/4 left-10 w-72 h-72 bg-primary/20 rounded-full blur-[120px] animate-float" />
-      <div className="absolute bottom-1/4 right-10 w-96 h-96 bg-accent/20 rounded-full blur-[120px] animate-float" style={{ animationDelay: '2s' }} />
     </section>
   );
 };
