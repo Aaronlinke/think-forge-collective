@@ -1,33 +1,18 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Loader2, Send, Save, Share2, Download, Brain, Globe, 
-  Zap, Users, Sparkles, Camera, Command, ChevronDown,
-  Settings2, History, Workflow
+  Zap, Users, Sparkles, Camera, ChevronDown, History
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useCollectiveThink } from "@/hooks/useCollectiveThink";
-import { useCreatorChat } from "@/hooks/useCreatorChat";
-import { useCollectiveIntelligence } from "@/hooks/useCollectiveIntelligence";
-import { useAdvancedModes } from "@/hooks/useAdvancedModes";
+import { useUniversalChat } from "@/hooks/useUniversalChat";
 import { useConversationBranching } from "@/hooks/useConversationBranching";
 import { useWebSocket } from "@/hooks/useWebSocket";
-import CollectiveThinkingIndicator from "@/components/CollectiveThinkingIndicator";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,8 +24,6 @@ import {
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
-  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import MessageBubble from "@/components/MessageBubble";
@@ -52,13 +35,6 @@ type Message = {
   role: "user" | "assistant";
   content: string;
   id: string;
-  attachments?: { type: string; data: string }[];
-};
-
-type Conversation = {
-  id: string;
-  title: string;
-  is_favorite: boolean;
 };
 
 type ChatMode = "creator" | "collective-think" | "collective-intelligence" | "browser";
@@ -95,59 +71,14 @@ export default function UniversalChat() {
   const [input, setInput] = useState("");
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [chatMode, setChatMode] = useState<ChatMode>("creator");
-  const [advancedMode, setAdvancedMode] = useState<"standard" | "debate" | "deep-research" | "rapid">("standard");
   const [browserUrl, setBrowserUrl] = useState("https://example.com");
-  const [screenshot, setScreenshot] = useState<string | null>(null);
   const [showBrowserPanel, setShowBrowserPanel] = useState(false);
   
   const { isConnected: wsConnected, sendMessage: wsSendMessage } = useWebSocket();
   const branching = useConversationBranching(currentConversationId);
-  
-  const collectiveThink = useCollectiveThink(chatMode);
-  const creatorChat = useCreatorChat();
-  const collectiveIntelligence = useCollectiveIntelligence(chatMode);
-  const advancedModes = useAdvancedModes(chatMode, advancedMode);
+  const { isLoading, streamThinking } = useUniversalChat(chatMode);
   
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  // Determine which streaming function and loading state to use
-  const getActiveMode = () => {
-    if (chatMode === "creator") {
-      return {
-        isLoading: creatorChat.isLoading,
-        thinkingModules: [],
-        streamThinking: creatorChat.streamThinking,
-      };
-    }
-    if (chatMode === "browser") {
-      return {
-        isLoading: creatorChat.isLoading,
-        thinkingModules: [],
-        streamThinking: creatorChat.streamThinking,
-      };
-    }
-    if (chatMode === "collective-think") {
-      return {
-        isLoading: collectiveThink.isLoading,
-        thinkingModules: [],
-        streamThinking: collectiveThink.streamThinking,
-      };
-    }
-    if (advancedMode !== "standard") {
-      return {
-        isLoading: advancedModes.isLoading,
-        thinkingModules: advancedModes.thinkingModules,
-        streamThinking: advancedModes.streamAdvancedThinking,
-      };
-    }
-    return {
-      isLoading: collectiveIntelligence.isLoading,
-      thinkingModules: collectiveIntelligence.thinkingModules,
-      streamThinking: collectiveIntelligence.streamCollectiveThinking,
-    };
-  };
-
-  const { isLoading, thinkingModules, streamThinking } = getActiveMode();
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -300,7 +231,6 @@ export default function UniversalChat() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            screenshot: screenshot,
             url: browserUrl,
             task: input || "Analysiere diese Webseite und beschreibe was du siehst",
           }),
@@ -499,20 +429,10 @@ export default function UniversalChat() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Advanced Mode (for collective modes) */}
-              {(chatMode === "collective-intelligence" || chatMode === "collective-think") && (
-                <Select value={advancedMode} onValueChange={(v: typeof advancedMode) => setAdvancedMode(v)}>
-                  <SelectTrigger className="w-[160px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="standard">Standard</SelectItem>
-                    <SelectItem value="debate">🔥 Debate</SelectItem>
-                    <SelectItem value="deep-research">🔬 Research</SelectItem>
-                    <SelectItem value="rapid">⚡ Rapid</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
+              {/* Mode description */}
+              <span className="text-xs text-muted-foreground hidden lg:block">
+                {modeConfig[chatMode].description}
+              </span>
 
               {/* Browser Mode Controls */}
               {chatMode === "browser" && (
@@ -636,9 +556,6 @@ export default function UniversalChat() {
               />
             ))}
 
-            {isLoading && thinkingModules.length > 0 && (
-              <CollectiveThinkingIndicator activeModules={thinkingModules} />
-            )}
             {isLoading && <TypingIndicator />}
           </div>
         </ScrollArea>
