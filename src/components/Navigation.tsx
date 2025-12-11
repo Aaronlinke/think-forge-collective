@@ -1,4 +1,4 @@
-import { Brain, Menu, LogOut, User, Settings, Sparkles, Moon, Sun, Crown, BarChart, Globe } from "lucide-react";
+import { Brain, Menu, LogOut, User, Settings, Sparkles, Moon, Sun, Crown, BarChart, Globe, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -91,6 +91,10 @@ const Navigation = () => {
                     <p className="text-sm font-medium">{user.email}</p>
                   </div>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/chat")} className="cursor-pointer">
+                    <MessageCircle className="mr-2 h-4 w-4 text-primary" />
+                    Universal Chat
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/dashboard")} className="cursor-pointer">
                     <Sparkles className="mr-2 h-4 w-4" />
                     Dashboard
@@ -154,6 +158,14 @@ const Navigation = () => {
                       <User className="h-4 w-4" />
                       <span className="text-sm">{user.email}</span>
                     </div>
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate("/chat")}
+                      className="flex items-center gap-2 w-full"
+                    >
+                      <MessageCircle className="h-4 w-4 text-primary" />
+                      Universal Chat
+                    </Button>
                     <Button 
                       variant="outline"
                       onClick={() => navigate("/dashboard")}
