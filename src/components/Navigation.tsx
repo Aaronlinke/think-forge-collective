@@ -1,4 +1,4 @@
-import { Brain, Menu, LogOut, User, Settings, Sparkles, Moon, Sun, Crown, BarChart, Globe, MessageCircle, Clock, FlaskConical, Terminal, Shield } from "lucide-react";
+import { Brain, Menu, LogOut, User, Settings, Sparkles, Moon, Sun, Crown, BarChart, Globe, MessageCircle, Clock, FlaskConical, Terminal, Shield, Network } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -124,6 +124,11 @@ const Navigation = () => {
                     <Shield className="mr-2 h-4 w-4 text-orange-500" />
                     Crypto Analyzer
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/collective-hub")} className="cursor-pointer">
+                    <Network className="mr-2 h-4 w-4 text-yellow-500" />
+                    Collective Hub
+                  </DropdownMenuItem>
                   {isAdmin && (
                     <DropdownMenuItem onClick={() => navigate("/creator-chat")} className="cursor-pointer">
                       <Crown className="mr-2 h-4 w-4 text-yellow-500" />
@@ -238,6 +243,14 @@ const Navigation = () => {
                     >
                       <Shield className="h-4 w-4 text-orange-500" />
                       Crypto Analyzer
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate("/collective-hub")}
+                      className="flex items-center gap-2 w-full"
+                    >
+                      <Network className="h-4 w-4 text-yellow-500" />
+                      Collective Hub
                     </Button>
                     {isAdmin && (
                       <Button 
