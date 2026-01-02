@@ -25,6 +25,7 @@ import TimeMachine from "./pages/TimeMachine";
 import ConsciousnessLab from "./pages/ConsciousnessLab";
 import SVRCTerminal from "./pages/SVRCTerminal";
 import CryptoAnalyzer from "./pages/CryptoAnalyzer";
+import CollectiveHub from "./pages/CollectiveHub";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,7 @@ const App = () => (
             <Route path="/consciousness-lab" element={<ConsciousnessLab />} />
             <Route path="/svrc-terminal" element={<SVRCTerminal />} />
             <Route path="/crypto-analyzer" element={<CryptoAnalyzer />} />
+            <Route path="/collective-hub" element={<CollectiveHub />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
