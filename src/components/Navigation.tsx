@@ -1,4 +1,4 @@
-import { Brain, Menu, LogOut, User, Settings, Sparkles, Moon, Sun, Crown, BarChart, Globe, MessageCircle } from "lucide-react";
+import { Brain, Menu, LogOut, User, Settings, Sparkles, Moon, Sun, Crown, BarChart, Globe, MessageCircle, Clock, FlaskConical, Terminal, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -107,6 +107,23 @@ const Navigation = () => {
                     <Globe className="mr-2 h-4 w-4" />
                     Guided Browser
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/time-machine")} className="cursor-pointer">
+                    <Clock className="mr-2 h-4 w-4 text-cyan-500" />
+                    Time Machine
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/consciousness-lab")} className="cursor-pointer">
+                    <FlaskConical className="mr-2 h-4 w-4 text-purple-500" />
+                    Consciousness Lab
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/svrc-terminal")} className="cursor-pointer">
+                    <Terminal className="mr-2 h-4 w-4 text-green-500" />
+                    SVRC Terminal
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/crypto-analyzer")} className="cursor-pointer">
+                    <Shield className="mr-2 h-4 w-4 text-orange-500" />
+                    Crypto Analyzer
+                  </DropdownMenuItem>
                   {isAdmin && (
                     <DropdownMenuItem onClick={() => navigate("/creator-chat")} className="cursor-pointer">
                       <Crown className="mr-2 h-4 w-4 text-yellow-500" />
@@ -189,6 +206,38 @@ const Navigation = () => {
                     >
                       <Globe className="h-4 w-4" />
                       Guided Browser
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate("/time-machine")}
+                      className="flex items-center gap-2 w-full"
+                    >
+                      <Clock className="h-4 w-4 text-cyan-500" />
+                      Time Machine
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate("/consciousness-lab")}
+                      className="flex items-center gap-2 w-full"
+                    >
+                      <FlaskConical className="h-4 w-4 text-purple-500" />
+                      Consciousness Lab
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate("/svrc-terminal")}
+                      className="flex items-center gap-2 w-full"
+                    >
+                      <Terminal className="h-4 w-4 text-green-500" />
+                      SVRC Terminal
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate("/crypto-analyzer")}
+                      className="flex items-center gap-2 w-full"
+                    >
+                      <Shield className="h-4 w-4 text-orange-500" />
+                      Crypto Analyzer
                     </Button>
                     {isAdmin && (
                       <Button 

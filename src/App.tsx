@@ -21,6 +21,10 @@ import CreatorChat from "./pages/CreatorChat";
 import UsageDashboard from "./pages/UsageDashboard";
 import GuidedBrowser from "./pages/GuidedBrowser";
 import UniversalChat from "./pages/UniversalChat";
+import TimeMachine from "./pages/TimeMachine";
+import ConsciousnessLab from "./pages/ConsciousnessLab";
+import SVRCTerminal from "./pages/SVRCTerminal";
+import CryptoAnalyzer from "./pages/CryptoAnalyzer";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +52,10 @@ const App = () => (
             <Route path="/creator-chat" element={<CreatorChat />} />
             <Route path="/guided-browser" element={<GuidedBrowser />} />
             <Route path="/chat" element={<UniversalChat />} />
+            <Route path="/time-machine" element={<TimeMachine />} />
+            <Route path="/consciousness-lab" element={<ConsciousnessLab />} />
+            <Route path="/svrc-terminal" element={<SVRCTerminal />} />
+            <Route path="/crypto-analyzer" element={<CryptoAnalyzer />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
