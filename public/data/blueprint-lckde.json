@@ -1,0 +1,152 @@
+{
+  "0": {
+    "projectName": "OmniGenesis Apex Solver & Forensic Framework",
+    "vision": "A mission-critical enterprise platform for entropic vector processing and cryptographic forensics. It utilizes specialized 'Inversion Engines' to reconstruct deterministic data from random states by identifying structural vulnerabilities in cryptographic implementations (LLL Lattice reduction) and physical resonance simulations (Moiré patterns, temporal entropy drift).",
+    "architecture": "Modular Micro-Engine Architecture combining a 'Compute-Heavy Monolith' for core mathematical logic with a 'Worker-Centric' parallel processing model for distributed scanning. The system is divided into Layer 0 (Sensors), Layer 1 (Entropic Decay), and Layer 2 (Geometric Inversion) to allow for isolated scaling of cryptographic solvers and physical simulations.",
+    "techStack": {
+      "frontend": "React 18 with Three.js (fractal/Moiré visualization), TailwindCSS, Redux Toolkit, React Query.",
+      "backend": "FastAPI (Python 3.11+), Rust (PyO3 bindings for high-performance secp256k1 and LLL optimization), NumPy, SciPy, QuTiP.",
+      "database": "PostgreSQL with TimescaleDB extension (temporal entropy tracking), Redis (distributed caching, task queuing, and rate limiting).",
+      "infra": "Dockerized Kubernetes (EKS) utilizing AWS Lambda for parallel PID-scanning, Terraform for IaC, and Prometheus/Grafana/Jaeger for observability."
+    },
+    "databaseSchema": "Tables: 'TargetAddresses' (ID, Address, Hash160, Source); 'EntropyScans' (ID, Type, Timestamp, ResultCount); 'FoundKeys' (ID, TargetID, PrivateKeyHex, WIF, EntropySource, DiscoveryTimestamp); 'PhysicsStates' (ID, ScaleFactor, TimeDilation, PositionVector); 'AuditLogs' (ID, PrincipalID, HMAC_Signature, OperationComplexity). Relationships: One-to-Many between Targets and FoundKeys; One-to-One between EntropyScans and PhysicsStates.",
+    "apiEndpoints": [
+      "POST /api/v1/recon/target - Initialize reconnaissance on a specific address or signature.",
+      "POST /api/v1/engine/entropy-scan - Triggers Layer 1 scanners for entropy vulnerability identification.",
+      "POST /api/v1/engine/geometric-inversion - Executes Layer 2 LLL-Gitter-Kryptanalyse on target vector space.",
+      "GET /api/v1/simulation/chronoplast - Retrieves current time-dilation and position vectors from the physics engine.",
+      "POST /api/v1/crypto/moire-encrypt - Encrypts data into 3D interference patterns for steganographic storage.",
+      "GET /api/v1/results/{targetId} - Returns discovered keys and forensic metadata for a validated target."
+    ],
+    "securityStrategy": "Hardware-isolated Execution Environments (TEE) for private key reconstruction; HSM-backed key rotation for non-repudiation; Zero-Knowledge Proof (ZKP) verification for address-key matching; AES-256-GCM encryption for all data at rest; TLS 1.3 with mandatory HSTS and CSP headers.",
+    "scalingPlan": "Horizontal Pod Autoscaling (HPA) targeting 70% CPU utilization for LLL tasks; Redis-based 'Compute Credit' system to manage high-latency geometric inversion calls; Use of AWS Spot Instances for massive-scale PID/entropy dictionary attacks; TimescaleDB hypertable partitioning for efficient temporal data retention.",
+    "priorityFeatures": [
+      "Lattice-Folding (LLL-Algorithm) for secp256k1 key recovery.",
+      "Symmetrical Recursive Inversion Logic (SRIL) for temporal data reconstruction.",
+      "Debian CVE-2008-0166 PID-space reconstruction engine.",
+      "3D Moiré-Pattern Steganography Engine and Three.js visualizer.",
+      "Distributed task queuing via Celery/RabbitMQ for long-running mathematical inversions.",
+      "HSM-grade immutable audit logging for forensic compliance."
+    ]
+  },
+  "1": {
+    "folderStructure": "omnigenesis-apex/├── infra/ (Terraform, K8s manifests, Dockerfiles) ├── src/frontend/ (React 18, Three.js, Tailwind, Redux) │   ├── src/components/viz/ (Moiré/Fractal Engines) │   └── src/store/ (Redux Toolkit, RTK Query) ├── src/backend/ (FastAPI Monolith) │   ├── api/v1/ (Endpoints for Recon, Engine, Simulation) │   ├── core/ (Mathematical Logic, Physics Engines) │   ├── engines/ (Layer 1: EntropicDecay, Layer 2: GeometricInversion) │   ├── rust_extensions/ (PyO3 bindings for LLL, secp256k1) │   └── models/ (SQLAlchemy/TimescaleDB Schemas) └── src/workers/ (Celery/RabbitMQ Task Handlers for PID/Entropy scanning)",
+    "designPatterns": [
+      "Strategy Pattern (Algorithm selection for Inversion Engines)",
+      "Observer Pattern (Real-time telemetry from Worker to Frontend)",
+      "Facade Pattern (Unified API for multi-layered engine logic)",
+      "Repository Pattern (Data persistence abstraction for TimescaleDB)",
+      "Worker Pool (Parallel AWS Lambda/Spot Instance task distribution)"
+    ],
+    "moduleDependencies": {
+      "core": [
+        "fastapi",
+        "pydantic",
+        "sqlalchemy",
+        "numpy",
+        "scipy",
+        "qutip",
+        "cryptography"
+      ],
+      "native": [
+        "pyo3",
+        "rust-secp256k1",
+        "ntl-lattice-library"
+      ],
+      "frontend": [
+        "three",
+        "@react-three/fiber",
+        "@reduxjs/toolkit",
+        "tanstack-react-query",
+        "lucide-react"
+      ],
+      "infra": [
+        "redis",
+        "celery",
+        "psycopg2-binary",
+        "prometheus-client"
+      ]
+    },
+    "stateManagement": "Hybrid: Redux Toolkit for global UI and 3D simulation parameters; React Query for server-side forensic data fetching; Redis for distributed backend task state and 'Compute Credit' tallies.",
+    "cachingStrategy": "L1: Local memory cache for API hot-paths; L2: Redis for high-latency geometric inversion results and PID-space bloom filters; L3: TimescaleDB hypertable partitioning for temporal entropy logs.",
+    "rateLimiting": "Redis-backed Token Bucket algorithm; tiered limits based on 'Compute Credit' system for high-complexity LLL-Gitter-Kryptanalyse calls; IP-based throttling for public reconnaissance endpoints.",
+    "errorBoundaryStrategy": "Frontend: Component-level React Error Boundaries with Three.js context recovery; Backend: Global FastAPI Exception Handlers with HMAC-signed forensic audit logging; Workers: Dead-letter queues (DLQ) with exponential backoff for failed lattice-folding tasks."
+  },
+  "2": {
+    "backendBoilerplate": "from fastapi import FastAPI, Depends, APIRouter\nfrom src.backend.api.v1 import recon, engine, simulation\nfrom src.backend.core.config import settings\nfrom redis import asyncio as aioredis\n\napp = FastAPI(title=\"Omnigenesis Apex\", version=\"1.0.0\")\n\n@app.on_event(\"startup\")\nasync def startup_event():\n    app.state.redis = await aioredis.from_url(settings.REDIS_URL)\n    # Initialize PyO3 LLL bindings\n    from rust_extensions import lll_engine\n    app.state.lll = lll_engine.LatticeInverter()\n\napi_v1_router = APIRouter()\napi_v1_router.include_router(recon.router, prefix=\"/recon\")\napi_v1_router.include_router(engine.router, prefix=\"/engine\")\napi_v1_router.include_router(simulation.router, prefix=\"/sim\")\n\napp.include_router(api_v1_router, prefix=\"/api/v1\")",
+    "frontendComponents": [
+      "FractalEngine.tsx: R3F component utilizing custom shaders for Layer 2 Geometric Inversion rendering",
+      "MoireVisualizer.tsx: Three.js overlay for interference pattern analysis during PID scanning",
+      "EntropyDashboard.tsx: Real-time telemetry feed connected to Redux Toolkit for worker state monitoring",
+      "ComputeCreditUI.tsx: Management interface for tracking LLL-Gitter-Kryptanalyse resource consumption",
+      "ControlPanel.tsx: Side-bar for adjusting simulation parameters like entropic decay rates and lattice dimensions"
+    ],
+    "authImplementation": "OAuth2 with Password Grant and JWT. Tokens include custom claims for 'Compute Credits' and 'Access Tier'. Validation occurs at the FastAPI dependency level with Redis-backed token revocation (L1 cache) and HMAC-signed audit logging for sensitive LLL operations.",
+    "models": "from sqlalchemy import Column, Float, DateTime, String, BigInteger, func\nfrom sqlalchemy.dialects.postgresql import UUID, JSONB\nfrom sqlalchemy.ext.declarative import declarative_base\n\nBase = declarative_base()\n\nclass EntropyLog(Base):\n    __tablename__ = 'entropy_logs'\n    id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.uuid_generate_v4())\n    timestamp = Column(DateTime(timezone=True), primary_key=True, default=func.now())\n    entropy_score = Column(Float, nullable=False)\n    metadata_tags = Column(JSONB)\n    # Note: TimescaleDB hypertable setup: SELECT create_hypertable('entropy_logs', 'timestamp');",
+    "apiClientConfig": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport const apexApi = createApi({\n  reducerPath: 'apexApi',\n  baseQuery: fetchBaseQuery({\n    baseUrl: '/api/v1',\n    prepareHeaders: (headers, { getState }) => {\n      const token = (getState() as RootState).auth.token;\n      if (token) headers.set('authorization', `Bearer ${token}`);\n      return headers;\n    },\n  }),\n  endpoints: (builder) => ({ /* recon, engine, simulation endpoints */ }),\n});",
+    "envConfig": "DATABASE_URL=postgresql://user:pass@localhost:5432/omnigenesis\nREDIS_URL=redis://localhost:6379/0\nSECRET_KEY=HMAC_SHA256_ROOT_SECRET\nCELERY_BROKER_URL=pyamqp://guest@localhost//\nRUST_LOG=info\nENVIRONMENT=production",
+    "loggingMiddleware": "class ForensicAuditMiddleware(BaseHTTPMiddleware):\n    async def dispatch(self, request: Request, call_next):\n        request_body = await request.body()\n        signature = hmac.new(settings.HMAC_KEY, request_body, hashlib.sha256).hexdigest()\n        response = await call_next(request)\n        logger.info(f'Forensic Log: {request.method} {request.url.path} | Signature: {signature}')\n        return response"
+  },
+  "3": {
+    "injectionPrevention": "Enforce strict Pydantic V2 schema validation for all FastAPI endpoints to prevent type-confusion; utilize SQLAlchemy's bindparam for all JSONB metadata_tags queries; implement input size and memory boundary checks at the Rust-FFI (PyO3) layer to prevent buffer overflows during LatticeInverter operations.",
+    "cspPolicy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; worker-src 'blob:'; connect-src 'self' wss://*; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests; sandbox allow-forms allow-scripts allow-same-origin;",
+    "csrfImplementation": "Deploy Double Submit Cookie pattern for all state-changing requests (POST/PUT/DELETE); utilize 'SameSite=Strict', 'Secure', and 'HttpOnly' flags for session cookies; ensure 'Origin' and 'Referer' header validation in ForensicAuditMiddleware for cross-origin mutation attempts.",
+    "advancedRateLimit": "Redis-backed sliding-window rate limiting; global tier-based throttling integrated with 'Compute Credits' JWT claim; specialized 5 req/min burst limit for computationally intensive LLL-Gitter-Kryptanalyse simulation endpoints to prevent resource exhaustion attacks.",
+    "encryptionStandard": "In-transit: TLS 1.3 with ECDHE-RSA-AES256-GCM-SHA384; At-rest: AES-256-GCM for sensitive JSONB fields and 'Compute Credit' balances; HMAC-SHA256 for forensic log integrity signatures using a hardware security module (HSM) managed key.",
+    "securityHeaders": [
+      "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload",
+      "X-Content-Type-Options: nosniff",
+      "X-Frame-Options: DENY",
+      "Referrer-Policy: strict-origin-when-cross-origin",
+      "Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()",
+      "X-XSS-Protection: 0"
+    ],
+    "sanitizationLogic": "Whitelist-based sanitization for 'metadata_tags' using Bleach; strict float range validation ([0.0, 1.0]) for 'entropic decay rates' and lattice dimensions; conversion of all Rust-bound inputs into immutable types before FFI traversal to prevent concurrent modification vulnerabilities.",
+    "auditLogDesign": "Immutable append-only TimescaleDB hypertable for 'entropy_logs'; each record includes a HMAC-SHA512 signature chaining to the previous entry (hash-chaining); captures user identity, source IP, request hash, and LLL-engine state delta for non-repudiation."
+  },
+  "4": {
+    "dockerConfig": "Multi-stage build utilizing 'rust:1.75-slim-bookworm' for the PyO3 FFI LatticeInverter compilation and 'python:3.12-slim-bookworm' for the production runtime. Includes 'libssl-dev' and 'pkg-config' dependencies. Runs as a non-privileged user 'lattice_svc' with UID 10001. Environment enforces 'PYTHONUNBUFFERED=1' and 'MALLOC_ARENA_MAX=2' to manage memory boundaries for LLL-engine operations.",
+    "k8sManifests": "Deployment using 3 replicas with PodTopologySpreadConstraints for HA. Service type ClusterIP with an Ingress resource managing TLS 1.3 termination. NetworkPolicy restricts ingress to port 8000 and egress exclusively to Redis (6379) and TimescaleDB (5432). Resource limits set at 2Gi RAM and 1 vCPU to accommodate the LLL-Gitter-Kryptanalyse burst requirements while preventing node exhaustion.",
+    "ciCdPipeline": "GitHub Actions workflow: 1. Static Analysis (Ruff, Mypy, Cargo Clippy); 2. Security Scanning (Trivy for containers, Bandit for Python, Cargo Audit for Rust crates); 3. Integration Testing with a transient TimescaleDB instance; 4. Kaniko build for OCI-compliant image generation; 5. GitOps deployment via ArgoCD triggered by semantic version tagging.",
+    "terraformPlan": "AWS Provider orchestrating: EKS (Elastic Kubernetes Service) with Bottlerocket OS nodes; RDS for PostgreSQL with TimescaleDB extension enabled; ElastiCache for Redis (Sliding-window rate limiting); CloudHSM for managing the HMAC-SHA256 log integrity keys; AWS WAF with custom rules for 'Double Submit Cookie' validation and CSP header injection.",
+    "monitoringStack": "Prometheus for metric collection; Grafana for visualization including custom dashboards for 'Compute Credit' consumption and LLL-engine latency; Vector for log aggregation from stdout; Loki for storage of ForensicAuditMiddleware logs; Alertmanager configured for high 'entropy_logs' signature failure rates and memory threshold breaches in Rust-FFI layers.",
+    "autoScalingRules": "Horizontal Pod Autoscaler (HPA) targeting 70% CPU utilization and a custom Prometheus metric for 'active_lll_simulations'. Scaling limits: min 3, max 15 replicas. Cluster Autoscaler manages EC2 node groups (m6i.large) across three availability zones.",
+    "backupStrategy": "Daily automated RDS snapshots with 35-day retention; TimescaleDB continuous archiving to S3 via pgBackRest; Redis RDB snapshots every 60 minutes for rate-limit persistence; S3 bucket versioning and Cross-Region Replication (CRR) for immutable audit log archives; Monthly recovery drills for ForensicAudit data.",
+    "healthCheckEndpoints": [
+      "/health/liveness",
+      "/health/readiness",
+      "/api/v1/simulation/status",
+      "/api/v1/entropy/audit-heartbeat"
+    ]
+  },
+  "5": {
+    "unitTestSuite": "Comprehensive Pytest suite with Hypothesis for property-based testing of Python FFI wrappers; Cargo test modules for Rust LatticeInverter core utilizing 'proptest' for LLL-Gitter edge cases; Mocking of PyO3 bindings to ensure memory safety and zero-copy transfer validation.",
+    "integrationTests": "Containerized testing using Testcontainers for TimescaleDB schema validation; Redis sliding-window logic verification; Verification of ForensicAuditMiddleware signature generation against a CloudHSM simulator; FFI memory leak detection using Valgrind during Python/Rust bridge execution.",
+    "e2eScenarios": [
+      "Full Lattice Inversion lifecycle: API submission of cryptanalysis parameters, Rust-FFI engine execution, persistence in TimescaleDB, and HMAC-verified logging to Loki.",
+      "Auto-scaling verification: Synthetic load injection to trigger HPA scaling from 3 to 15 replicas based on 'active_lll_simulations' metric.",
+      "Security Policy Enforcement: Validation of WAF Double Submit Cookie blocking and NetworkPolicy egress restriction to non-approved IP ranges."
+    ],
+    "loadTestingParams": "K6 scripts targeting 250 concurrent 'lll_engine' sessions; Ramping VUs to test HPA sensitivity at 70% CPU utilization; Baseline latency measurements for /api/v1/simulation/status under 2Gi RAM constraints.",
+    "perfOptimizations": "Enable Link Time Optimization (LTO) and 'codegen-units=1' in Cargo.toml for the LatticeInverter; Enforcement of 'MALLOC_ARENA_MAX=2' to mitigate memory fragmentation in multi-threaded LLL operations; Use of 'jemalloc' as the global allocator for Rust to optimize heap performance.",
+    "dbOptimization": "Implementation of TimescaleDB Hypertables for entropy logs; GiST indexing for multidimensional lattice vector queries; Continuous Aggregates for pre-calculating Compute Credit consumption metrics.",
+    "bundleOptimization": "Strict multi-stage Docker pruning: stripping Rust symbols via 'strip' command and removing 'pkg-config/libssl-dev' from the final production layer; Using 'python:3.12-slim-bookworm' to minimize the attack surface and image size below 200MB.",
+    "latencyImprovements": "TLS 1.3 zero-RTT handshake termination at Ingress; Redis-backed local caching for rate-limit checks to bypass PostgreSQL overhead; Bottlerocket OS node implementation to reduce syscall latency and container startup jitter."
+  },
+  "6": {
+    "apiDocumentation": "OpenAPI 3.1 specification for the LatticeInverter Engine. Key endpoints include /api/v1/simulation/submit for cryptanalysis parameter ingestion, /api/v1/simulation/status for asynchronous state polling, and /api/v1/credits/balance for real-time compute consumption tracking. All requests require HMAC-signed headers validated via ForensicAuditMiddleware.",
+    "adminDashboardFeatures": [
+      "Real-time visualization of 'active_lll_simulations' across HPA-scaled clusters",
+      "Compute Credit management and threshold alerting for enterprise tenants",
+      "Lattice vector query interface with GiST-indexed search",
+      "System health monitoring for Rust-FFI memory utilization and JEMalloc heap performance"
+    ],
+    "analyticsStrategy": "Utilization of TimescaleDB Continuous Aggregates for high-performance telemetry. Metrics focus on lattice inversion success rates, compute credit burn velocity, and LLL engine latency distribution. Detailed logs are piped to Grafana Loki with synthetic load correlation.",
+    "featureFlags": "Granular control over LTO-enabled engine variants, sliding-window rate limit thresholds via Redis, and optional NetworkPolicy egress strictness for high-security environments.",
+    "multiTenancy": "Logical isolation at the database layer using TimescaleDB Hypertables partitioned by TenantID. HMAC-verified logging ensures non-repudiation and auditability across forensic audit middleware streams.",
+    "whiteLabeling": "Configurable API response headers and custom UI themes for the administrative dashboard. Support for custom TLS certificates and vanity endpoints terminated at the Ingress layer.",
+    "operationsRunbook": "Standard procedures for managing HPA scaling events (3 to 15 replicas), manual flushing of Redis-backed rate limit caches, and environment variable tuning for MALLOC_ARENA_MAX to mitigate memory fragmentation in high-concurrency LLL operations.",
+    "troubleshootingGuide": "Diagnostic workflows for FFI memory leak identification using Valgrind, resolving WAF Double Submit Cookie rejection, and investigating latency jitter in Bottlerocket OS nodes during peak synthetic load.",
+    "executiveSummary": "A high-performance, enterprise-grade cryptanalysis platform centered on the LatticeInverter core. Built with a memory-safe Rust-FFI bridge and Python 3.12, the system ensures zero-copy data transfer and sub-millisecond latency. Featuring automated scaling, robust security via CloudHSM simulation, and highly optimized storage via TimescaleDB, the product provides a secure, auditable environment for complex lattice-based computations."
+  }
+}
