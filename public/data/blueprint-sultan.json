@@ -1,0 +1,153 @@
+{
+  "0": {
+    "projectName": "Linke-OmniGenesis Unified Engine (LOUE) - Cryptographic Forensic Suite",
+    "vision": "A mission-critical infrastructure providing deterministic SECP256k1 key derivation and algebraic state inversion for cryptographic reconstruction and high-frequency hardware drive control.",
+    "architecture": "Distributed multi-language microservice ecosystem utilizing a Rust-based real-time kernel (LoomOS) for nanosecond-precise bus communication (LoomBus). It implements a Python-Rust hybrid for high-precision modular arithmetic, following a hexagonal design (Ports & Adapters) to isolate BigInt logic. Security is enforced through a Sidecar pattern for HSM isolation and a Capability-Object Security Model (POLA) for hardware access control, with an immutable WORM-based ledger for audit integrity.",
+    "techStack": {
+      "frontend": "React 18 with WebGL for 3D-Moiré-Interference visualization and WebAssembly (WASM) for client-side Zero-Knowledge (ZK) proofs.",
+      "backend": "Python 3.12 (FastAPI) with MyPy for business logic; Rust 1.75 (num-bigint, tokio, pyo3) for FFI-based modular arithmetic and the LoomBus real-time kernel.",
+      "database": "PostgreSQL 16 with TimescaleDB for telemetry; Redis for sliding-window rate-limiting; AWS CloudHSM/Azure Dedicated HSM for root-seed entropy protection.",
+      "infra": "Docker-orchestrated Kubernetes (EKS/AKS) using PodAntiAffinity, FPGA-integrated Edge Nodes (Xilinx Artix-7) for GaN-Gate timing, and Terraform-managed global Anycast distribution."
+    },
+    "databaseSchema": "Table 'DerivationProfiles' { profile_id: UUID, curve_name: String, scaling_n: BigInt, geometry_g: BigInt, entropy_h: BigInt }; Table 'Telemetry' { time: TIMESTAMPTZ, device_id: UUID, flux_vector: VECTOR(3), gate_temp: FLOAT, voltage: FLOAT }; Table 'CapabilityTokens' { token_id: UUID, bitmask: BIGINT, expiration: TIMESTAMP, owner_id: UUID }; Table 'AuditChain' { audit_id: UUID, timestamp: TIMESTAMP, action: String, parameter_hash: String, hmac_link: String };",
+    "apiEndpoints": [
+      "POST /api/v1/derive-key - Deterministic key derivation based on Linke-Principle",
+      "POST /api/v1/chronoplast/invert - Algebraic inversion of cryptographic states",
+      "POST /api/v1/drive/force - Real-time drive target for GaN amplifiers",
+      "GET /api/v1/bus/status - LoomBus status and SPSC queue monitoring",
+      "STREAM /ws/v1/telemetry - Low-latency WebSocket for Moiré flow visualization",
+      "GET /api/v1/audit/verify - Integrity check of the SHA-256 hash chain"
+    ],
+    "securityStrategy": "Implementation of constant-time modular inversion to mitigate side-channel attacks. Access is governed by 64-bit bitmasked Capability Tokens (POLA). Private scalars are restricted to volatile MLOCK memory and wiped post-computation using the Zeroize trait. Communication requires TLS 1.3 with mandatory mTLS for inter-service gRPC and HMAC signing for hardware-bound drive commands.",
+    "scalingPlan": "Horizontal Pod Autoscaling (HPA) triggered by SPSC bus depth and ZK-generation queue length. Multi-region Anycast deployment ensures sub-10ms latency for blockchain node interaction. Vertical scaling utilizes hardware affinity on RISC-V/ARM cores with FPGA-offloaded arithmetic for cryptographic inversion tasks.",
+    "priorityFeatures": [
+      "Deterministic SECP256k1 recovery via Linke constants",
+      "Lock-free Single-Producer Single-Consumer (SPSC) LoomBus architecture",
+      "Algebraic State Inversion Machine (Chronoplast) for cryptographic reconstruction",
+      "High-frequency Phase-Locked Loop (PLL) control for GaN amplifiers",
+      "Immutable WORM-compliant Audit Trail with SHA-256 chaining",
+      "Client-side WASM-based ZK-Proof generation for parameter validation"
+    ]
+  },
+  "1": {
+    "folderStructure": "loue-root/ ├── services/ │   ├── chronoplast-engine/ │   │   ├── api/ (Python/FastAPI) │   │   ├── core_rs/ (Rust/PyO3) │   │   ├── domain/ (Hexagonal Business Logic) │   │   └── adapters/ (HSM/PostgreSQL) │   ├── loombus-kernel/ (Rust/Real-time) │   │   ├── src/bus/ (SPSC Queues) │   │   └── src/drivers/ (GaN/FPGA-Interface) │   └── audit-service/ (WORM/Chaining) ├── frontend/ │   ├── src/components/ (Moiré-Visualization) │   ├── src/zk-wasm/ (Rust-to-WASM) │   └── public/ ├── infrastructure/ │   ├── terraform/ (Anycast/EKS) │   └── k8s/ (Sidecar-Manifests) └── shared/ (Protobuf/gRPC)",
+    "designPatterns": [
+      "Hexagonal (Ports & Adapters)",
+      "Sidecar Pattern (HSM Isolation)",
+      "Capability-Object Security Model (POLA)",
+      "Single-Producer Single-Consumer (SPSC) Lock-free Bus",
+      "Strategy Pattern (Algebraic Inversion Methods)",
+      "Observer Pattern (Real-time Telemetry)",
+      "Circuit Breaker (High-frequency Drive Protection)"
+    ],
+    "moduleDependencies": {
+      "core_rust": [
+        "num-bigint",
+        "tokio",
+        "pyo3",
+        "zeroize",
+        "crossbeam-channel",
+        "ring"
+      ],
+      "backend_python": [
+        "fastapi",
+        "pydantic-v2",
+        "sqlalchemy",
+        "alembic",
+        "httpx",
+        "aioredis"
+      ],
+      "frontend_wasm": [
+        "wasm-bindgen",
+        "js-sys",
+        "web-sys",
+        "snarkjs"
+      ],
+      "telemetry": [
+        "timescaledb",
+        "prometheus-client"
+      ]
+    },
+    "stateManagement": "Distributed state across Redis for service orchestration; Localized lock-free SPSC queues for LoomBus real-time state; Zustand for React frontend with WASM-integrated ZK-proof state persistence.",
+    "cachingStrategy": "Redis-backed sliding-window for global rate limits; In-memory L1 cache using LRU for pre-computed Linke constants in Rust; Anycast edge-caching for static WebGL assets.",
+    "rateLimiting": "Tiered approach: Global rate-limiting via Redis-cell (token bucket); Hardware-level throttling based on GaN gate temperature telemetry; Capability-token bitmask quota enforcement.",
+    "errorBoundaryStrategy": "Rust panic-to-Python-exception translation via PyO3; React Error Boundaries for WebGL context loss recovery; Sentry integration for cross-language trace correlation; gRPC status code mapping for mTLS failures."
+  },
+  "2": {
+    "backendBoilerplate": "from fastapi import FastAPI, Depends;\nfrom chronoplast_engine import core_rs;\nfrom pydantic import BaseModel;\n\napp = FastAPI(title='Chronoplast Engine');\n\n# PyO3 Bridge initialization\nengine = core_rs.ChronoplastCore(threads=4, memory_limit='2GB');\n\n@app.post('/compute/linke-constant')\nasync def calculate_algebraic_inversion(payload: dict):\n    # Delegating heavy computation to Rust Core via PyO3\n    result = engine.compute_inversion(payload['matrix_seed']);\n    return {'status': 'success', 'result': result};",
+    "frontendComponents": [
+      "MoireCanvas: A WebGL-based component for high-frequency visualization of LoomBus telemetry data.",
+      "ZkProofProvider: A React context wrapper that manages Rust-to-WASM lifecycle for generating zero-knowledge proofs locally.",
+      "GaNStatusMonitor: A real-time dashboard component displaying hardware-level gate temperatures and throttle states.",
+      "CapabilityManager: A UI module for managing bitmask-based capability tokens and POLA-compliant access levels."
+    ],
+    "authImplementation": "The system utilizes a Capability-Object Security Model. Authentication initiates via an OAuth2 flow, which returns a JWT containing a custom bitmask in the 'cap' claim. This bitmask is validated by a FastAPI dependency that checks against the HSM-backed capability registry. For sensitive mutations, the frontend uses the zk-wasm module to generate a proof of ownership on the client side before the request is processed by the LoomBus Kernel.",
+    "models": "from sqlalchemy import Column, Integer, String, JSON, DateTime, BigInteger;\nfrom sqlalchemy.ext.declarative import declarative_base;\n\nBase = declarative_base();\n\nclass TelemetryData(Base):\n    __tablename__ = 'telemetry';\n    id = Column(BigInteger, primary_key=True);\n    device_id = Column(String(64), index=True);\n    gan_temp = Column(Integer);\n    bus_state = Column(JSON);\n    timestamp = Column(DateTime, index=True);\n\nclass CapabilityToken(Base):\n    __tablename__ = 'capability_tokens';\n    token_hash = Column(String(128), primary_key=True);\n    bitmask = Column(BigInteger);\n    expires_at = Column(DateTime);",
+    "apiClientConfig": "import axios;\n\nconst apiClient = axios.create({\n  baseURL: process.env.VITE_API_BASE_URL,\n  headers: { 'Content-Type': 'application/json' },\n  timeout: 5000\n});\n\napiClient.interceptors.response.use(\n  response => response,\n  error => {\n    if (error.response?.status === 418) return handleCircuitBreaker(error);\n    return Promise.reject(error);\n  }\n);",
+    "envConfig": "DATABASE_URL=postgresql://user:pass@localhost:5432/loue_db\nREDIS_URL=redis://localhost:6379/0\nHSM_SLOT_ID=1\nLOOM_BUS_FREQUENCY=1000\nGAN_TEMP_THRESHOLD=85\nSENTRY_DSN=https://example.sentry.io/123\nZK_PROVER_KEY_PATH=/etc/loue/keys/prover.key",
+    "loggingMiddleware": "import structlog;\nfrom starlette.middleware.base import BaseHTTPMiddleware;\n\nclass StructuredLoggingMiddleware(BaseHTTPMiddleware):\n    async def dispatch(self, request, call_next):\n        structlog.contextvars.clear_contextvars();\n        structlog.contextvars.bind_contextvars(request_id=request.headers.get('X-Request-ID'));\n        response = await call_next(request);\n        # Correlation with Rust tracing-subscriber is handled via the X-Trace-ID header\n        return response;"
+  },
+  "3": {
+    "injectionPrevention": "Enforce strict Pydantic schemas for the '/compute' payload to prevent arbitrary dict injection into the PyO3 bridge. Implement specific bounds-checking for the 'matrix_seed' to mitigate buffer overflows or memory-exhaustion attacks within the Rust core. Utilize SQLAlchemy's expression language to ensure parameterization of all telemetry and capability queries.",
+    "cspPolicy": "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self' ${API_BASE_URL}; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
+    "csrfImplementation": "Since the system utilizes OAuth2/JWT with a capability bitmask, enforce 'SameSite=Strict' on session cookies and implement a custom 'X-Requested-With' header requirement. For mutations involving ZkProofProvider, utilize a synchronized state-nonce generated in the ZK-WASM module to prevent replay attacks.",
+    "advancedRateLimit": "Deploy a Redis-backed tiered Leaky Bucket: 500 requests/min for telemetry polling, but a strict 2 requests/min for the 'calculate_algebraic_inversion' endpoint to protect Rust engine threads from computational DoS. Integrate with GaNStatusMonitor to automatically throttle API throughput if hardware temperatures exceed 80°C.",
+    "encryptionStandard": "In Transit: TLS 1.3 with ChaCha20-Poly1305. At Rest: AES-256-GCM for the 'bus_state' JSON columns; 'token_hash' fields must be derived using PBKDF2 with a unique salt per record, managed by the HSM_SLOT_ID.",
+    "securityHeaders": [
+      "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload",
+      "X-Content-Type-Options: nosniff",
+      "X-Frame-Options: DENY",
+      "Referrer-Policy: strict-origin-when-cross-origin",
+      "Permissions-Policy: accelerometer=(), camera=(), geolocation=(), microphone=(), usb=()",
+      "Cross-Origin-Opener-Policy: same-origin"
+    ],
+    "sanitizationLogic": "Standardize all telemetry string inputs using a strict whitelist regex (^[a-zA-Z0-9_\\-:]+$). Use Pydantic's 'conint' for hardware temperatures to enforce physical reality bounds (0-150°C). Serialize all JSON 'bus_state' outputs through an encoder that prevents UTF-7/UTF-8 character confusion attacks.",
+    "auditLogDesign": "Unified observability pipeline merging Starlette structured logs and Rust tracing-subscriber events via a common 'X-Trace-ID'. Every mutation logged must include the 'cap' bitmask from the JWT and a SHA-256 hash of the request body, signed by the HSM to ensure non-repudiation of hardware-level gate changes."
+  },
+  "4": {
+    "dockerConfig": "Multi-stage build: Stage 1 uses 'rust:1.72-slim' to compile PyO3 modules with target-cpu=native for algebraic performance. Stage 2 uses 'python:3.11-slim' for the Starlette/Pydantic API layer. Includes 'libssl-dev' and 'ca-certificates'. Runs as a non-privileged user 'svc_runtime' with UID 10001. Port 8000 exposed.",
+    "k8sManifests": "Deployment: 3 replicas with PodAntiAffinity to ensure high availability across AZs. Resource requests: 500m CPU, 1Gi RAM. ConfigMap for CSP and CORS policies. Secret: HSM_SLOT_ID and Database credentials via CSI Secret Store Driver. Service: ClusterIP for internal routing. Ingress: NGINX-based with 'ssl-protocols: TLSv1.3' and strict HSTS headers.",
+    "ciCdPipeline": "GitHub Actions: 1. Static Analysis (Cargo Clippy, Ruff/Bandit). 2. Dependency Scan (Trivy). 3. Unit Tests (Pytest + Cargo Test). 4. Containerization (Docker Buildx with multi-platform support). 5. Infrastructure Drift Check (Terraform Plan). 6. Deployment: Canary release to production via Helm with automated rollback on 5xx spike.",
+    "terraformPlan": "Cloud Provider: AWS/GCP. Resources: VPC with private subnets only; NAT Gateway for external API calls; EKS/GKE cluster; RDS PostgreSQL instance for telemetry; ElastiCache Redis for the tiered leaky bucket; CloudHSM/KMS for AES-256-GCM key management and non-repudiation signing.",
+    "monitoringStack": "Prometheus scraping '/metrics' for Rust tracing events and Starlette performance. Grafana dashboards visualizing 'calculate_algebraic_inversion' latency and GaNStatusMonitor hardware thermal telemetry. Loki for structured log aggregation with 'X-Trace-ID' correlation. Alertmanager configured for hardware thermal alerts (>80C).",
+    "autoScalingRules": "HorizontalPodAutoscaler (HPA) based on custom metrics: scale out if 'rust_engine_thread_utilization' > 75% or 'request_queue_depth' > 100. GaNStatusMonitor integration: scale-down trigger if hardware temperature exceeds 80°C to prevent thermal throttling.",
+    "backupStrategy": "Database: Daily automated snapshots with 35-day retention and Point-In-Time Recovery (PITR). HSM: Key material backed up to secondary region-locked secure enclave. Bus_state: Hourly encrypted exports of JSON columns to S3/GCS with Object Lock/WORM enabled.",
+    "healthCheckEndpoints": [
+      "/health/liveness",
+      "/health/readiness",
+      "/metrics",
+      "/api/v1/status/hardware"
+    ]
+  },
+  "5": {
+    "unitTestSuite": "Hybrid suite utilizing 'Cargo test' for Rust-based algebraic inversion logic with SIMD assertions and 'Pytest' for Starlette/Pydantic schema validation. Includes PyO3 boundary testing to ensure memory safety between the Python runtime and Rust binaries.",
+    "integrationTests": "Validation of the tiered leaky bucket via Redis ElastiCache, RDS PostgreSQL connection pooling using SQLAlchemy/Tortoise, and HSM mock-service verification for AES-256-GCM signing operations. Tests 'libssl-dev' compatibility within the 'python:3.11-slim' runtime environment.",
+    "e2eScenarios": [
+      "Full Algebraic Flow: Ingress TLS 1.3 handshake -> Starlette API -> Rust compute engine -> HSM signing -> 200 OK Response.",
+      "Auto-Scaling Lifecycle: Simulate 'request_queue_depth' > 100 to trigger HPA expansion followed by 'GaNStatusMonitor' thermal spike to verify emergency scale-down.",
+      "Security & Persistence: Verify 'svc_runtime' non-privileged execution and 'Object Lock' integrity on S3/GCS bus_state exports."
+    ],
+    "loadTestingParams": "Target: 15,000 RPS sustained. Metrics: p99 latency for 'calculate_algebraic_inversion' must remain < 45ms. Threshold: Scale out via HPA when 'rust_engine_thread_utilization' exceeds 75%.",
+    "perfOptimizations": "Rust compilation with 'target-cpu=native' to leverage host-specific SIMD; migration of Starlette ASGI loop to 'uvloop'; use of 'PyO3' zero-copy data exchange to avoid serialization overhead between Python and Rust.",
+    "dbOptimization": "Implementation of GIN (Generalized Inverted Index) on 'bus_state' JSONB columns for rapid telemetry retrieval; B-Tree indexing on 'X-Trace-ID' and 'timestamp' for Prometheus/Loki correlation.",
+    "bundleOptimization": "Multi-stage Docker build to eliminate build-time dependencies (libssl-dev, cargo) from the final 100MB production image; binary stripping of Rust modules to minimize container footprint.",
+    "latencyImprovements": "Enforcement of TLS 1.3 0-RTT for ingress; NGINX upstream keep-alive tuning; local caching of HSM session handles to reduce cryptographic overhead per request."
+  },
+  "6": {
+    "apiDocumentation": "Comprehensive OpenAPI 3.1 specification exposing the high-performance 'calculate_algebraic_inversion' endpoint. Includes Pydantic-validated Starlette schemas for request/response bodies, TLS 1.3 0-RTT handshake requirements, and HSM-signed headers for enterprise-grade non-repudiation.",
+    "adminDashboardFeatures": [
+      "Real-time GaNStatusMonitor thermal and power consumption telemetry visualization",
+      "Dynamic HPA (Horizontal Pod Autoscaler) threshold configuration and 'request_queue_depth' monitoring",
+      "Tiered Leaky Bucket rate-limit adjustment per tenant/API key via Redis integration",
+      "Audit logs for HSM session handle utilization and cryptographic signing operations",
+      "Live view of Rust engine thread utilization and SIMD instruction set efficiency"
+    ],
+    "analyticsStrategy": "Aggregated telemetry strategy utilizing Prometheus/Loki correlation via B-Tree indexed 'X-Trace-ID' and 'timestamp'. Advanced JSONB GIN indexing on PostgreSQL 'bus_state' enables granular post-hoc analysis of algebraic compute outputs and S3-based state persistence.",
+    "featureFlags": "Granular control via environment-specific toggles for: HSM mock-service failover, Rust SIMD acceleration (native vs. generic), and zero-copy PyO3 data exchange paths for legacy compatibility testing.",
+    "multiTenancy": "Logical isolation enforced via tiered Redis ElastiCache buckets and PostgreSQL row-level security on 'bus_state' tables. Tenant-specific HSM signing keys ensure cryptographic data segregation in shared-compute environments.",
+    "whiteLabeling": "Extensible Starlette middleware for custom header injection, support for vanity API domains with dedicated TLS 1.3 certificates, and configurable HSM-signed payload metadata for third-party consumer validation.",
+    "operationsRunbook": "Standard procedures for multi-stage Docker deployment, HPA scaling response to 'request_queue_depth' spikes, thermal emergency shutdown protocols for GaN hardware, and HSM session handle recycling to minimize cryptographic latency.",
+    "troubleshootingGuide": "Diagnostic workflows for: PyO3 boundary memory safety exceptions, 0-RTT handshake failures, GIN index performance degradation on high-volume JSONB telemetry, and SIMD assertion mismatches in Rust-based inversion logic.",
+    "executiveSummary": "A mission-critical algebraic inversion engine delivering 15,000 RPS with sub-45ms p99 latency. This enterprise-grade solution bridges Python’s rapid development cycle with Rust’s raw performance via PyO3, secured by hardware-backed HSM signing and optimized for high-density Kubernetes environments."
+  }
+}

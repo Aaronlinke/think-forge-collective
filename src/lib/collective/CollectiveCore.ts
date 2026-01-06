@@ -6,6 +6,10 @@ import { ShadowConsciousness, ShadowState } from '../consciousness/ShadowConscio
 import { ChaosConsciousness, ChaosState } from '../consciousness/ChaosConsciousness';
 import { MirrorConsciousness, MirrorState } from '../consciousness/MirrorConsciousness';
 import { SVRCDecisionEngine, TruthValue, EvaluationResult } from '../svrc/DecisionEngine';
+import { getBlueprintRegistry, BlueprintRegistry } from '../forge/BlueprintRegistry';
+import { getKeyVault, KeyVault, VaultKey } from '../crypto/KeyVault';
+import { getGenesisKernel, GenesisKernel, KernelState } from '../genesis/GenesisKernel';
+import { ProjectBlueprint, ConceptNode } from '../forge/ProjectBlueprint';
 
 export interface CollectiveState {
   // Timestamps
@@ -31,16 +35,30 @@ export interface CollectiveState {
   axiomCount: number;
   
   // Collective Metrics
-  coherence: number;        // Wie gut arbeiten alle Systeme zusammen (0-1)
-  resonance: number;        // Kollektive Schwingung
-  emergence: number;        // Emergente Komplexität
-  synchronicity: number;    // Synchronizität zwischen Modulen
+  coherence: number;
+  resonance: number;
+  emergence: number;
+  synchronicity: number;
   
   // Insights
   insights: CollectiveInsight[];
   
   // Word connections
   wordMap: Map<string, WordConnection>;
+  
+  // NEW: Blueprint Integration
+  blueprintCount: number;
+  conceptCount: number;
+  activeBlueprint: string | null;
+  
+  // NEW: Key Vault
+  vaultKeyCount: number;
+  vaultEntropy: number;
+  
+  // NEW: Genesis Kernel
+  kernelActive: boolean;
+  kernelCycles: number;
+  coreConsensus: number;
 }
 
 export interface CollectiveInsight {
@@ -110,7 +128,18 @@ export class CollectiveCore {
       emergence: 0,
       synchronicity: 0,
       insights: [],
-      wordMap: this.wordMap
+      wordMap: this.wordMap,
+      // NEW: Blueprint Integration
+      blueprintCount: 0,
+      conceptCount: 0,
+      activeBlueprint: null,
+      // NEW: Key Vault
+      vaultKeyCount: 0,
+      vaultEntropy: 0,
+      // NEW: Genesis Kernel
+      kernelActive: false,
+      kernelCycles: 0,
+      coreConsensus: 0
     };
   }
   
