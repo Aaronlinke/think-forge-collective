@@ -163,132 +163,175 @@ const Navigation = () => {
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent>
-              <div className="flex flex-col gap-6 mt-8">
+            <SheetContent className="overflow-y-auto">
+              <div className="flex flex-col gap-3 mt-6 pb-8">
+                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Navigation
+                </div>
                 {navLinks.map((link) => (
                   <a
                     key={link.name}
                     href={link.href}
-                    className="text-lg font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-base font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
                   >
                     {link.name}
                   </a>
                 ))}
+                
                 {user && (
                   <>
-                    <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="flex items-center gap-2 text-muted-foreground py-2 border-t border-border mt-2">
                       <User className="h-4 w-4" />
-                      <span className="text-sm">{user.email}</span>
+                      <span className="text-sm truncate">{user.email}</span>
                     </div>
-                    <Button 
-                      variant="outline"
-                      onClick={() => navigate("/chat")}
-                      className="flex items-center gap-2 w-full"
-                    >
-                      <MessageCircle className="h-4 w-4 text-primary" />
-                      Universal Chat
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => navigate("/dashboard")}
-                      className="flex items-center gap-2 w-full"
-                    >
-                      <Sparkles className="h-4 w-4" />
-                      Dashboard
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => navigate("/usage")}
-                      className="flex items-center gap-2 w-full"
-                    >
-                      <BarChart className="h-4 w-4" />
-                      Statistiken
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => navigate("/guided-browser")}
-                      className="flex items-center gap-2 w-full"
-                    >
-                      <Globe className="h-4 w-4" />
-                      Guided Browser
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => navigate("/time-machine")}
-                      className="flex items-center gap-2 w-full"
-                    >
-                      <Clock className="h-4 w-4 text-cyan-500" />
-                      Time Machine
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => navigate("/consciousness-lab")}
-                      className="flex items-center gap-2 w-full"
-                    >
-                      <FlaskConical className="h-4 w-4 text-purple-500" />
-                      Consciousness Lab
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => navigate("/svrc-terminal")}
-                      className="flex items-center gap-2 w-full"
-                    >
-                      <Terminal className="h-4 w-4 text-green-500" />
-                      SVRC Terminal
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => navigate("/crypto-analyzer")}
-                      className="flex items-center gap-2 w-full"
-                    >
-                      <Shield className="h-4 w-4 text-orange-500" />
-                      Crypto Analyzer
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => navigate("/collective-hub")}
-                      className="flex items-center gap-2 w-full"
-                    >
-                      <Network className="h-4 w-4 text-yellow-500" />
-                      Collective Hub
-                    </Button>
-                    {isAdmin && (
+                    
+                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-4 mb-2">
+                      Apps
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2">
                       <Button 
                         variant="outline"
-                        onClick={() => navigate("/creator-chat")}
-                        className="flex items-center gap-2 w-full"
+                        onClick={() => navigate("/chat")}
+                        className="flex flex-col items-center gap-1 h-auto py-3 text-xs"
                       >
-                        <Crown className="h-4 w-4 text-yellow-500" />
-                        Creator Chat
+                        <MessageCircle className="h-5 w-5 text-primary" />
+                        Chat
                       </Button>
-                    )}
-                    <Button 
-                      variant="outline"
-                      onClick={() => navigate("/settings")}
-                      className="flex items-center gap-2 w-full"
-                    >
-                      <Settings className="h-4 w-4" />
-                      Einstellungen
-                    </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => navigate("/dashboard")}
+                        className="flex flex-col items-center gap-1 h-auto py-3 text-xs"
+                      >
+                        <Sparkles className="h-5 w-5" />
+                        Dashboard
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => navigate("/usage")}
+                        className="flex flex-col items-center gap-1 h-auto py-3 text-xs"
+                      >
+                        <BarChart className="h-5 w-5" />
+                        Statistiken
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => navigate("/guided-browser")}
+                        className="flex flex-col items-center gap-1 h-auto py-3 text-xs"
+                      >
+                        <Globe className="h-5 w-5" />
+                        Browser
+                      </Button>
+                    </div>
+                    
+                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-4 mb-2">
+                      Tools
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button 
+                        variant="outline"
+                        onClick={() => navigate("/time-machine")}
+                        className="flex flex-col items-center gap-1 h-auto py-3 text-xs"
+                      >
+                        <Clock className="h-5 w-5 text-cyan-500" />
+                        Time Machine
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => navigate("/consciousness-lab")}
+                        className="flex flex-col items-center gap-1 h-auto py-3 text-xs"
+                      >
+                        <FlaskConical className="h-5 w-5 text-purple-500" />
+                        Consciousness
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => navigate("/svrc-terminal")}
+                        className="flex flex-col items-center gap-1 h-auto py-3 text-xs"
+                      >
+                        <Terminal className="h-5 w-5 text-green-500" />
+                        SVRC
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => navigate("/crypto-analyzer")}
+                        className="flex flex-col items-center gap-1 h-auto py-3 text-xs"
+                      >
+                        <Shield className="h-5 w-5 text-orange-500" />
+                        Crypto
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => navigate("/collective-hub")}
+                        className="flex flex-col items-center gap-1 h-auto py-3 text-xs col-span-2"
+                      >
+                        <Network className="h-5 w-5 text-yellow-500" />
+                        Collective Hub
+                      </Button>
+                      {isAdmin && (
+                        <Button 
+                          variant="outline"
+                          onClick={() => navigate("/creator-chat")}
+                          className="flex flex-col items-center gap-1 h-auto py-3 text-xs col-span-2"
+                        >
+                          <Crown className="h-5 w-5 text-yellow-500" />
+                          Creator Chat
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <div className="border-t border-border mt-4 pt-4">
+                      <Button 
+                        variant="ghost"
+                        onClick={() => navigate("/settings")}
+                        className="flex items-center gap-2 w-full justify-start"
+                      >
+                        <Settings className="h-4 w-4" />
+                        Einstellungen
+                      </Button>
+                    </div>
                   </>
                 )}
-                {user ? (
-                  <Button 
-                    variant="outline"
-                    onClick={handleSignOut}
-                    className="flex items-center gap-2 w-full"
+                
+                <div className="mt-auto pt-4 border-t border-border">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                    className="w-full justify-start gap-2"
                   >
-                    <LogOut className="h-4 w-4" />
-                    Abmelden
+                    {theme === "dark" ? (
+                      <>
+                        <Sun className="h-4 w-4" />
+                        Light Mode
+                      </>
+                    ) : (
+                      <>
+                        <Moon className="h-4 w-4" />
+                        Dark Mode
+                      </>
+                    )}
                   </Button>
-                ) : (
-                  <Button 
-                    onClick={() => navigate("/auth")}
-                    className="bg-gradient-primary hover:opacity-90 transition-all duration-300 shadow-glow-primary rounded-lg font-semibold w-full"
-                  >
-                    Anmelden
-                  </Button>
-                )}
+                  
+                  {user ? (
+                    <Button 
+                      variant="ghost"
+                      onClick={handleSignOut}
+                      className="flex items-center gap-2 w-full justify-start text-destructive hover:text-destructive mt-2"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Abmelden
+                    </Button>
+                  ) : (
+                    <Button 
+                      onClick={() => navigate("/auth")}
+                      className="bg-gradient-primary hover:opacity-90 transition-all duration-300 shadow-glow-primary rounded-lg font-semibold w-full mt-2"
+                    >
+                      Anmelden
+                    </Button>
+                  )}
+                </div>
               </div>
             </SheetContent>
           </Sheet>
