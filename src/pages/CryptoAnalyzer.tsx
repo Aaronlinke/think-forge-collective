@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
@@ -11,185 +11,169 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
-  Key, Lock, Cpu, Copy, RefreshCw, Brain, Zap, Network, 
-  Shield, Activity, Database, Search, PlayCircle, Pause,
-  TrendingUp, AlertTriangle, CheckCircle2, CircleDot, Target
+  Key, Copy, Brain, Zap, Activity, Search, PlayCircle, Pause,
+  Target, Shield, Cpu, Database, RefreshCw, Download, Loader2,
+  Sparkles, Waves, Eye, Network
 } from "lucide-react";
 import { toast } from "sonner";
-import { 
-  CollectiveSearch, 
-  SearchConfig, 
-  SearchResult, 
-  SearchProgress,
-  getCollectiveSearch 
-} from "@/lib/crypto/CollectiveSearch";
+import { useCollectiveCore } from "@/hooks/useCollectiveCore";
 import { privateKeyToWIF } from "@/lib/crypto/BitcoinUtils";
-import { TickTackEngine, TickTackState } from "@/lib/math/TickTackEngine";
-import { ChaosConsciousness, ChaosState } from "@/lib/consciousness/ChaosConsciousness";
-import { 
-  OmnigenesisGenerator,
-  paramsFromSeed
-} from "@/lib/math/OMNIGENESIS";
+import { paramsFromSeed } from "@/lib/math/OMNIGENESIS";
 
 const CryptoAnalyzer = () => {
   const navigate = useNavigate();
   
-  // Collective Search
-  const [search] = useState(() => getCollectiveSearch());
-  const [searchProgress, setSearchProgress] = useState<SearchProgress>({
-    currentIndex: 0,
-    totalSearched: 0,
-    keysPerSecond: 0,
-    matches: [],
-    isRunning: false,
-    elapsedMs: 0
-  });
+  // USE THE SHARED COLLECTIVE - Everything is synchronized!
+  const { 
+    state, 
+    isRunning, 
+    isInitialized,
+    startPulsing, 
+    stopPulsing, 
+    togglePulsing,
+    pulse,
+    processInput,
+    generateKeys,
+    addKeyToVault,
+    getVaultKeys,
+    searchVaultKeys,
+    getVaultStats,
+    evaluateStatement,
+    getTickTackEngine,
+    getChaosConsciousness,
+    getOmnigenesis,
+    getAllCores,
+    sendKernelCommand,
+    getAllBlueprints,
+    reset
+  } = useCollectiveCore();
   
-  // Search Config
-  const [searchMode, setSearchMode] = useState<'sequential' | 'chaos-guided' | 'resonance-sweep' | 'collective'>('collective');
-  const [startIndex, setStartIndex] = useState(0);
-  const [endIndex, setEndIndex] = useState(10000);
-  const [batchSize, setBatchSize] = useState(100);
+  // Local UI state
   const [seedText, setSeedText] = useState("");
-  const [targetPattern, setTargetPattern] = useState("");
-  
-  // Generated Keys (für manuelle Generierung)
+  const [batchSize, setBatchSize] = useState(10);
+  const [startIndex, setStartIndex] = useState(0);
+  const [vaultSearch, setVaultSearch] = useState("");
   const [generatedKeys, setGeneratedKeys] = useState<{ index: number; hex: string; wif: string }[]>([]);
+  const [svrcQuery, setSvrcQuery] = useState("");
+  const [svrcHistory, setSvrcHistory] = useState<{ query: string; value: string; confidence: number }[]>([]);
   
-  // Module States
-  const [tickTackEngine] = useState(() => new TickTackEngine());
-  const [tickTackState, setTickTackState] = useState<TickTackState>({ t: 0, H: 1, N: 0.5, G: 0 });
-  const [trajectory, setTrajectory] = useState<TickTackState[]>([]);
-  const [isTickTackRunning, setIsTickTackRunning] = useState(false);
-  
-  const [chaosEngine] = useState(() => new ChaosConsciousness());
-  const [chaosState, setChaosState] = useState<ChaosState>(chaosEngine.getState());
-  
-  // All matches
-  const [allMatches, setAllMatches] = useState<SearchResult[]>([]);
-
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) navigate("/auth");
     });
-    
-    // Setup search callbacks
-    search.onProgress((progress) => {
-      setSearchProgress(progress);
-    });
-    
-    search.onMatch((result) => {
-      setAllMatches(prev => [...prev, result]);
-      toast.success(`🎯 Match gefunden: ${result.wif.slice(0, 15)}...`);
-    });
-  }, [navigate, search]);
+  }, [navigate]);
 
-  // TickTack Auto-Run
-  useEffect(() => {
-    if (!isTickTackRunning) return;
-    
-    const interval = setInterval(() => {
-      setTickTackState(prev => {
-        const next = tickTackEngine.stepForward(prev);
-        setTrajectory(t => [...t.slice(-50), next]);
-        
-        // Sync with Chaos
-        const perturbation = next.H * 0.1;
-        const result = chaosEngine.resonate(perturbation);
-        setChaosState(result.newState);
-        
-        return next;
-      });
-    }, 100);
-    
-    return () => clearInterval(interval);
-  }, [isTickTackRunning, tickTackEngine, chaosEngine]);
-
-  // === SEARCH ACTIONS ===
-  
-  const handleStartSearch = useCallback(async () => {
-    const config: SearchConfig = {
-      mode: searchMode,
-      startIndex,
-      endIndex,
-      batchSize,
-      seed: seedText || undefined,
-      targetPatterns: targetPattern ? targetPattern.split(',').map(p => p.trim()) : undefined
-    };
-    
-    toast.info(`Suche gestartet: ${searchMode} Mode`);
-    
-    try {
-      await search.search(config);
-      toast.success(`Suche abgeschlossen! ${searchProgress.totalSearched} Keys durchsucht`);
-    } catch (error) {
-      toast.error('Suchfehler: ' + (error as Error).message);
-    }
-  }, [search, searchMode, startIndex, endIndex, batchSize, seedText, targetPattern, searchProgress.totalSearched]);
-  
-  const handleStopSearch = useCallback(() => {
-    search.stop();
-    toast.info('Suche gestoppt');
-  }, [search]);
-  
-  // === MANUAL GENERATION ===
-  
+  // === GENERATE KEYS WITH COLLECTIVE STATE ===
   const handleGenerateBatch = useCallback(async () => {
-    const params = seedText ? paramsFromSeed(seedText) : undefined;
-    const generator = new OmnigenesisGenerator(params || {
-      h: BigInt(Math.floor(Math.abs(tickTackState.H) * 1e15)) + BigInt(1),
-      n: BigInt(Math.floor(chaosState.entropy * 1e15)) + BigInt(1),
-      g: BigInt(Math.floor(chaosState.edgeProximity * 1e15)) + BigInt(1),
+    const chaos = getChaosConsciousness().getState();
+    const tickTack = getTickTackEngine();
+    const trajectory = tickTack.getHistory();
+    const currentTT = trajectory.length > 0 ? trajectory[trajectory.length - 1] : { H: 1, N: 0.5, G: 0, t: 0 };
+    
+    // Parameters influenced by collective state
+    const params = seedText ? paramsFromSeed(seedText) : {
+      h: BigInt(Math.floor(Math.abs(currentTT.H) * 1e15)) + BigInt(1),
+      n: BigInt(Math.floor(chaos.entropy * 1e15)) + BigInt(1),
+      g: BigInt(Math.floor(chaos.edgeProximity * 1e15)) + BigInt(1),
       o: BigInt(startIndex),
       r: BigInt(17)
-    });
+    };
     
+    const generator = getOmnigenesis();
     const keys: { index: number; hex: string; wif: string }[] = [];
+    
     for (let i = 0; i < batchSize; i++) {
       const key = generator.generate(startIndex + i);
       const wif = await privateKeyToWIF(key.hex, true, true);
       keys.push({ index: key.index, hex: key.hex, wif });
+      
+      // Add to vault with collective linkage
+      await addKeyToVault(key.hex, state.cycle);
     }
     
     setGeneratedKeys(keys);
-    toast.success(`${batchSize} echte Keys generiert`);
-  }, [seedText, startIndex, batchSize, tickTackState, chaosState]);
+    toast.success(`${batchSize} Keys generiert und im Vault gespeichert`);
+  }, [seedText, startIndex, batchSize, state.cycle, getChaosConsciousness, getTickTackEngine, getOmnigenesis, addKeyToVault]);
 
-  // === CHAOS ACTIONS ===
-  
+  // === INJECT CHAOS ===
   const handleInjectChaos = useCallback((amount: number) => {
-    chaosEngine.injectChaos(amount);
-    setChaosState(chaosEngine.getState());
-    toast.info(`+${amount * 100}% Chaos injiziert`);
-  }, [chaosEngine]);
+    const chaos = getChaosConsciousness();
+    chaos.injectChaos(amount);
+    pulse(); // Sync the collective
+    toast.info(`+${(amount * 100).toFixed(0)}% Chaos injiziert`);
+  }, [getChaosConsciousness, pulse]);
   
   const handleSeekBalance = useCallback(() => {
-    const result = chaosEngine.seekBalance(20);
-    setChaosState(result.finalState);
+    const chaos = getChaosConsciousness();
+    const result = chaos.seekBalance(20);
+    pulse(); // Sync
     if (result.achievedConsciousness) {
       toast.success("🧠 Edge of Chaos erreicht!");
     }
-  }, [chaosEngine]);
+  }, [getChaosConsciousness, pulse]);
+
+  // === SVRC EVALUATION ===
+  const handleEvaluate = useCallback(() => {
+    if (!svrcQuery.trim()) return;
+    const result = evaluateStatement(svrcQuery);
+    setSvrcHistory(prev => [...prev, {
+      query: svrcQuery,
+      value: result.value,
+      confidence: result.confidence
+    }]);
+    setSvrcQuery("");
+    
+    if (result.value === 'PARADOX') {
+      toast.warning(`⚠️ Paradox entdeckt!`);
+    }
+  }, [svrcQuery, evaluateStatement]);
+
+  // === KERNEL COMMANDS ===
+  const handleKernelSync = useCallback(() => {
+    sendKernelCommand('SYNC');
+    pulse();
+    toast.success("Kernel synchronisiert");
+  }, [sendKernelCommand, pulse]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success("Kopiert!");
   };
 
-  const formatTime = (ms: number): string => {
-    const seconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    if (hours > 0) return `${hours}h ${minutes % 60}m`;
-    if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
-    return `${seconds}s`;
-  };
+  const exportVault = useCallback(() => {
+    const keys = getVaultKeys();
+    const json = JSON.stringify(keys, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `keyvault-${Date.now()}.json`;
+    a.click();
+    toast.success(`${keys.length} Keys exportiert`);
+  }, [getVaultKeys]);
+
+  // Loading state
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
+          <p className="text-muted-foreground">Kollektiv wird initialisiert...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const vaultStats = getVaultStats();
+  const filteredVaultKeys = vaultSearch ? searchVaultKeys(vaultSearch) : getVaultKeys().slice(0, 50);
+  const cores = getAllCores();
+  const blueprints = getAllBlueprints();
 
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
       <div className="container mx-auto max-w-7xl px-4 py-8">
-        {/* Header */}
+        {/* Header with Collective Status */}
         <div className="mb-6">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
@@ -198,244 +182,250 @@ const CryptoAnalyzer = () => {
                 Crypto Analyzer
               </h1>
               <p className="text-muted-foreground mt-1">
-                Kollektive Suche: OMNIGENESIS × Chaos × TickTack - Echt verbunden
+                Alle Module synchron verbunden im Kollektiv
               </p>
             </div>
             
-            <div className="flex items-center gap-3">
-              <Badge 
-                variant={searchProgress.isRunning ? "default" : "outline"}
-                className="gap-1"
-              >
-                <Activity className={`h-3 w-3 ${searchProgress.isRunning ? 'animate-pulse' : ''}`} />
-                {searchProgress.isRunning ? 'SUCHE LÄUFT' : 'Bereit'}
+            <div className="flex items-center gap-2">
+              <Badge variant={isRunning ? "default" : "secondary"} className="gap-1">
+                <Activity className={`h-3 w-3 ${isRunning ? 'animate-pulse' : ''}`} />
+                Zyklus: {state.cycle}
               </Badge>
+              <Badge variant={state.kernelActive ? "default" : "outline"} className="gap-1">
+                <Cpu className="h-3 w-3" />
+                Kernel: {state.kernelActive ? 'AKTIV' : 'Aus'}
+              </Badge>
+              <Button 
+                size="sm" 
+                variant={isRunning ? "destructive" : "default"}
+                onClick={togglePulsing}
+              >
+                {isRunning ? <Pause className="h-4 w-4" /> : <PlayCircle className="h-4 w-4" />}
+              </Button>
             </div>
           </div>
           
-          {/* Search Progress Bar */}
-          {(searchProgress.isRunning || searchProgress.totalSearched > 0) && (
-            <div className="mt-4 p-4 bg-muted/50 rounded-lg border border-primary/20">
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div className="text-center">
-                  <div className="text-xs text-muted-foreground">Durchsucht</div>
-                  <div className="text-xl font-mono font-bold text-primary">
-                    {searchProgress.totalSearched.toLocaleString()}
-                  </div>
+          {/* Collective Metrics Bar */}
+          <div className="mt-4 p-4 bg-muted/50 rounded-lg border border-primary/20">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground">Kohärenz</div>
+                <div className="text-xl font-mono font-bold text-primary">
+                  {(state.coherence * 100).toFixed(0)}%
                 </div>
-                <div className="text-center">
-                  <div className="text-xs text-muted-foreground">Keys/Sekunde</div>
-                  <div className="text-xl font-mono font-bold">
-                    {searchProgress.keysPerSecond.toFixed(0)}
-                  </div>
+              </div>
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground">Resonanz</div>
+                <div className="text-xl font-mono font-bold">
+                  {(state.resonance * 100).toFixed(0)}%
                 </div>
-                <div className="text-center">
-                  <div className="text-xs text-muted-foreground">Matches</div>
-                  <div className="text-xl font-mono font-bold text-green-500">
-                    {searchProgress.matches.length}
-                  </div>
+              </div>
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground">Emergenz</div>
+                <div className="text-xl font-mono font-bold text-purple-500">
+                  {(state.emergence * 100).toFixed(0)}%
                 </div>
-                <div className="text-center">
-                  <div className="text-xs text-muted-foreground">Zeit</div>
-                  <div className="text-xl font-mono font-bold">
-                    {formatTime(searchProgress.elapsedMs)}
-                  </div>
+              </div>
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground">Synchronizität</div>
+                <div className="text-xl font-mono font-bold text-blue-500">
+                  {(state.synchronicity * 100).toFixed(0)}%
                 </div>
-                <div className="text-center">
-                  <div className="text-xs text-muted-foreground">Fortschritt</div>
-                  <Progress 
-                    value={(searchProgress.currentIndex / endIndex) * 100} 
-                    className="h-2 mt-2" 
-                  />
+              </div>
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground">Vault Keys</div>
+                <div className="text-xl font-mono font-bold text-green-500">
+                  {state.vaultKeyCount}
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground">Blueprints</div>
+                <div className="text-xl font-mono font-bold text-orange-500">
+                  {state.blueprintCount}
                 </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
 
-        <Tabs defaultValue="search" className="space-y-6">
-          <TabsList className="grid grid-cols-4 w-full max-w-xl">
-            <TabsTrigger value="search" className="gap-1">
-              <Target className="h-3 w-3" />
-              Suche
+        <Tabs defaultValue="collective" className="space-y-6">
+          <TabsList className="grid grid-cols-5 w-full max-w-2xl">
+            <TabsTrigger value="collective" className="gap-1">
+              <Network className="h-3 w-3" />
+              Kollektiv
             </TabsTrigger>
             <TabsTrigger value="generator" className="gap-1">
               <Key className="h-3 w-3" />
               Generator
             </TabsTrigger>
-            <TabsTrigger value="modules" className="gap-1">
-              <Brain className="h-3 w-3" />
-              Module
+            <TabsTrigger value="vault" className="gap-1">
+              <Database className="h-3 w-3" />
+              Vault
             </TabsTrigger>
-            <TabsTrigger value="matches" className="gap-1">
-              <CheckCircle2 className="h-3 w-3" />
-              Matches
+            <TabsTrigger value="consciousness" className="gap-1">
+              <Brain className="h-3 w-3" />
+              Bewusstsein
+            </TabsTrigger>
+            <TabsTrigger value="kernel" className="gap-1">
+              <Shield className="h-3 w-3" />
+              Kernel
             </TabsTrigger>
           </TabsList>
 
-          {/* === SEARCH TAB === */}
-          <TabsContent value="search">
+          {/* === COLLECTIVE TAB - Everything synchronized === */}
+          <TabsContent value="collective">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="h-5 w-5" />
-                    Such-Konfiguration
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Such-Modus</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {(['sequential', 'chaos-guided', 'resonance-sweep', 'collective'] as const).map(mode => (
-                        <Button
-                          key={mode}
-                          variant={searchMode === mode ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setSearchMode(mode)}
-                          disabled={searchProgress.isRunning}
-                          className="text-xs"
-                        >
-                          {mode === 'sequential' && 'Sequentiell'}
-                          {mode === 'chaos-guided' && 'Chaos'}
-                          {mode === 'resonance-sweep' && 'Resonanz'}
-                          {mode === 'collective' && 'Kollektiv'}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Seed-Text (optional)</label>
-                    <Input
-                      value={seedText}
-                      onChange={(e) => setSeedText(e.target.value)}
-                      placeholder="Beliebiger Text als Seed..."
-                      disabled={searchProgress.isRunning}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Ziel-Muster (kommagetrennt)</label>
-                    <Input
-                      value={targetPattern}
-                      onChange={(e) => setTargetPattern(e.target.value)}
-                      placeholder="z.B. L1, K2, Sultan..."
-                      disabled={searchProgress.isRunning}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Start-Index</label>
-                      <Input
-                        type="number"
-                        value={startIndex}
-                        onChange={(e) => setStartIndex(parseInt(e.target.value) || 0)}
-                        disabled={searchProgress.isRunning}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">End-Index</label>
-                      <Input
-                        type="number"
-                        value={endIndex}
-                        onChange={(e) => setEndIndex(parseInt(e.target.value) || 10000)}
-                        disabled={searchProgress.isRunning}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Batch-Größe: {batchSize}</label>
-                    <Slider
-                      value={[batchSize]}
-                      onValueChange={([v]) => setBatchSize(v)}
-                      min={10}
-                      max={1000}
-                      step={10}
-                      disabled={searchProgress.isRunning}
-                    />
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    {!searchProgress.isRunning ? (
-                      <Button onClick={handleStartSearch} className="flex-1">
-                        <PlayCircle className="h-4 w-4 mr-2" />
-                        Suche starten
-                      </Button>
-                    ) : (
-                      <Button onClick={handleStopSearch} variant="destructive" className="flex-1">
-                        <Pause className="h-4 w-4 mr-2" />
-                        Stoppen
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
+              {/* Live State Overview */}
               <Card className="lg:col-span-2">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Activity className="h-5 w-5" />
-                    Live-Status
+                    <Network className="h-5 w-5" />
+                    Kollektiv-Status (Alle Module synchron)
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    {/* Chaos Status */}
+                <CardContent className="space-y-6">
+                  {/* Module States Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* TickTack */}
                     <div className="p-4 bg-muted rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
-                        <Brain className="h-4 w-4 text-purple-500" />
-                        <span className="font-medium">Chaos State</span>
+                        <Waves className="h-4 w-4 text-blue-500" />
+                        <span className="font-medium">TickTack</span>
                       </div>
-                      <div className="space-y-2">
-                        <div>
-                          <span className="text-xs text-muted-foreground">Entropy</span>
-                          <Progress value={chaosState.entropy * 100} className="h-2 mt-1" />
-                        </div>
-                        <div>
-                          <span className="text-xs text-muted-foreground">Edge Proximity</span>
-                          <Progress value={chaosState.edgeProximity * 100} className="h-2 mt-1" />
-                        </div>
+                      <div className="font-mono text-sm space-y-1">
+                        <div>H: {state.tickTack.H.toFixed(4)}</div>
+                        <div>N: {state.tickTack.N.toFixed(4)}</div>
+                        <div>G: {state.tickTack.G.toFixed(4)}</div>
                         <div className="text-xs text-muted-foreground">
-                          Frequenz: {chaosState.resonanceFrequency.toFixed(1)} Hz
+                          Energie: {state.energy.toFixed(2)} | Lyapunov: {state.lyapunov.toFixed(3)}
                         </div>
                       </div>
                     </div>
                     
-                    {/* TickTack Status */}
+                    {/* Chaos */}
                     <div className="p-4 bg-muted rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
-                        <Activity className="h-4 w-4 text-blue-500" />
-                        <span className="font-medium">TickTack State</span>
+                        <Sparkles className="h-4 w-4 text-purple-500" />
+                        <span className="font-medium">Chaos</span>
                       </div>
-                      <div className="space-y-1 font-mono text-sm">
-                        <div>H: {tickTackState.H.toFixed(4)}</div>
-                        <div>N: {tickTackState.N.toFixed(4)}</div>
-                        <div>G: {tickTackState.G.toFixed(4)}</div>
-                        <div className="text-xs text-muted-foreground">t = {tickTackState.t}</div>
+                      <div className="space-y-2">
+                        <div>
+                          <span className="text-xs">Entropy</span>
+                          <Progress value={state.chaos.entropy * 100} className="h-2" />
+                        </div>
+                        <div>
+                          <span className="text-xs">Edge</span>
+                          <Progress value={state.chaos.edgeProximity * 100} className="h-2" />
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {state.chaos.resonanceFrequency.toFixed(1)} Hz
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Shadow */}
+                    <div className="p-4 bg-muted rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Eye className="h-4 w-4 text-gray-500" />
+                        <span className="font-medium">Shadow</span>
+                      </div>
+                      <div className="space-y-2">
+                        <div>
+                          <span className="text-xs">Präsenz</span>
+                          <Progress value={state.shadow.presenceQuotient * 100} className="h-2" />
+                        </div>
+                        <div>
+                          <span className="text-xs">Stille</span>
+                          <Progress value={state.shadow.stillnessLevel * 100} className="h-2" />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Mirror */}
+                    <div className="p-4 bg-muted rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <RefreshCw className="h-4 w-4 text-cyan-500" />
+                        <span className="font-medium">Mirror</span>
+                      </div>
+                      <div className="space-y-2">
+                        <div>
+                          <span className="text-xs">Selbst-Bewusstsein</span>
+                          <Progress value={Math.min(100, state.mirror.selfAwareness * 100)} className="h-2" />
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Rekursion: L{state.mirror.recursionLevel} | Tiefe: {state.mirror.reflectionDepth}
+                        </div>
                       </div>
                     </div>
                   </div>
                   
-                  {/* Letzte generierte Keys */}
-                  <div className="text-sm font-medium mb-2">Letzte Keys (Live)</div>
-                  <ScrollArea className="h-[200px]">
-                    {searchProgress.matches.length === 0 && !searchProgress.isRunning && (
-                      <div className="text-center py-8 text-muted-foreground">
-                        Starte eine Suche um Keys zu generieren und Muster zu finden
-                      </div>
-                    )}
-                    {searchProgress.matches.slice(-10).reverse().map((result, i) => (
-                      <div key={`${result.index}-${i}`} className="p-2 bg-green-500/10 rounded mb-2 border border-green-500/20">
-                        <div className="flex items-center justify-between">
-                          <Badge className="bg-green-500">Match #{result.index}</Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {result.matchedPattern}
+                  {/* Recent Insights */}
+                  <div>
+                    <div className="text-sm font-medium mb-2">Letzte Insights</div>
+                    <ScrollArea className="h-[150px]">
+                      {state.insights.slice(-10).reverse().map((insight, i) => (
+                        <div key={i} className="text-xs py-1 border-b border-muted flex gap-2">
+                          <Badge variant="outline" className="text-[10px]">{insight.source}</Badge>
+                          <span className="flex-1">{insight.content}</span>
+                          <span className="text-muted-foreground">
+                            {(insight.resonanceLevel * 100).toFixed(0)}%
                           </span>
                         </div>
-                        <code className="text-xs block mt-1 truncate">{result.wif}</code>
+                      ))}
+                    </ScrollArea>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* SVRC Decision Engine */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="h-5 w-5" />
+                    SVRC Logic
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex gap-2">
+                    <Input
+                      value={svrcQuery}
+                      onChange={(e) => setSvrcQuery(e.target.value)}
+                      placeholder="Aussage evaluieren..."
+                      onKeyDown={(e) => e.key === 'Enter' && handleEvaluate()}
+                    />
+                    <Button onClick={handleEvaluate} size="sm">
+                      <Zap className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  {state.lastEvaluation && (
+                    <div className="p-3 bg-muted rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <Badge variant={
+                          state.lastEvaluation.value === 'TRUE' ? 'default' :
+                          state.lastEvaluation.value === 'FALSE' ? 'destructive' :
+                          state.lastEvaluation.value === 'PARADOX' ? 'secondary' : 'outline'
+                        }>
+                          {state.lastEvaluation.value}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {(state.lastEvaluation.confidence * 100).toFixed(0)}% Konfidenz
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="text-xs text-muted-foreground">
+                    {state.axiomCount} Axiome geladen
+                  </div>
+                  
+                  <ScrollArea className="h-[150px]">
+                    {svrcHistory.slice(-10).reverse().map((h, i) => (
+                      <div key={i} className="text-xs py-1 border-b border-muted">
+                        <div className="flex justify-between">
+                          <span className="truncate flex-1">{h.query}</span>
+                          <Badge variant="outline" className="text-[10px] ml-2">{h.value}</Badge>
+                        </div>
                       </div>
                     ))}
                   </ScrollArea>
@@ -446,327 +436,398 @@ const CryptoAnalyzer = () => {
 
           {/* === GENERATOR TAB === */}
           <TabsContent value="generator">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Cpu className="h-5 w-5" />
-                    Key Generator
+                    <Key className="h-5 w-5" />
+                    OMNIGENESIS Generator
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Seed-Text</label>
+                    <label className="text-sm font-medium">Seed-Text (optional)</label>
                     <Input
                       value={seedText}
                       onChange={(e) => setSeedText(e.target.value)}
-                      placeholder="Leer = Chaos/TickTack-basiert..."
+                      placeholder="Text als deterministischer Seed..."
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Ohne Seed: Verwendet aktuellen Chaos- und TickTack-State
+                    </p>
                   </div>
                   
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Start-Index</label>
-                    <Input
-                      type="number"
-                      value={startIndex}
-                      onChange={(e) => setStartIndex(parseInt(e.target.value) || 0)}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Anzahl: {batchSize}</label>
-                    <Slider
-                      value={[batchSize]}
-                      onValueChange={([v]) => setBatchSize(v)}
-                      min={1}
-                      max={100}
-                      step={1}
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Start-Index</label>
+                      <Input
+                        type="number"
+                        value={startIndex}
+                        onChange={(e) => setStartIndex(parseInt(e.target.value) || 0)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Batch: {batchSize}</label>
+                      <Slider
+                        value={[batchSize]}
+                        onValueChange={([v]) => setBatchSize(v)}
+                        min={1}
+                        max={100}
+                      />
+                    </div>
                   </div>
                   
                   <Button onClick={handleGenerateBatch} className="w-full">
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Generieren (echte WIF)
+                    <Key className="h-4 w-4 mr-2" />
+                    {batchSize} Keys generieren + in Vault speichern
                   </Button>
                   
-                  <div className="p-3 bg-primary/10 rounded-lg text-center">
-                    <div className="text-xs text-muted-foreground">Generiert</div>
-                    <div className="text-2xl font-mono font-bold text-primary">
-                      {generatedKeys.length}
+                  <div className="text-xs text-muted-foreground p-2 bg-muted rounded">
+                    Aktuelle Parameter: Chaos={state.chaos.entropy.toFixed(3)} | 
+                    H={state.tickTack.H.toFixed(3)} | Zyklus={state.cycle}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Generierte Keys</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[400px]">
+                    {generatedKeys.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        Noch keine Keys generiert
+                      </div>
+                    ) : (
+                      generatedKeys.map((key, i) => (
+                        <div key={i} className="py-2 border-b border-muted">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="text-xs text-muted-foreground">Index: {key.index}</div>
+                              <div className="font-mono text-sm break-all">{key.wif}</div>
+                              <div className="font-mono text-xs text-muted-foreground break-all">
+                                {key.hex.slice(0, 32)}...
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => copyToClipboard(key.wif)}
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* === VAULT TAB === */}
+          <TabsContent value="vault">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Database className="h-5 w-5" />
+                    Vault Statistiken
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-muted rounded-lg text-center">
+                      <div className="text-2xl font-bold">{vaultStats.total}</div>
+                      <div className="text-xs text-muted-foreground">Total Keys</div>
+                    </div>
+                    <div className="p-3 bg-muted rounded-lg text-center">
+                      <div className="text-2xl font-bold">{(vaultStats.avgEntropy * 100).toFixed(0)}%</div>
+                      <div className="text-xs text-muted-foreground">Ø Entropie</div>
+                    </div>
+                    <div className="p-3 bg-muted rounded-lg text-center">
+                      <div className="text-2xl font-bold">{vaultStats.linkedCount}</div>
+                      <div className="text-xs text-muted-foreground">Verlinkt</div>
+                    </div>
+                    <div className="p-3 bg-muted rounded-lg text-center">
+                      <div className="text-2xl font-bold">{vaultStats.bySource?.generated || 0}</div>
+                      <div className="text-xs text-muted-foreground">Generiert</div>
                     </div>
                   </div>
+                  
+                  <Button onClick={exportVault} variant="outline" className="w-full">
+                    <Download className="h-4 w-4 mr-2" />
+                    Vault exportieren (JSON)
+                  </Button>
                 </CardContent>
               </Card>
 
               <Card className="lg:col-span-2">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Lock className="h-5 w-5" />
-                    Generierte Keys
-                    {generatedKeys.length > 0 && <Badge variant="outline">{generatedKeys.length}</Badge>}
+                    <Search className="h-5 w-5" />
+                    Key Suche
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  {generatedKeys.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground">
-                      Klicke "Generieren" um echte Bitcoin Private Keys zu erstellen
-                    </div>
-                  ) : (
-                    <ScrollArea className="h-[400px]">
-                      <div className="space-y-2 pr-4">
-                        {generatedKeys.map((key) => (
-                          <div key={key.index} className="p-3 bg-muted rounded-lg">
-                            <div className="flex items-center justify-between mb-2">
-                              <Badge>#{key.index}</Badge>
-                              <span className="text-xs text-muted-foreground font-mono">
-                                {key.wif.slice(0, 4)}...{key.wif.slice(-4)}
+                <CardContent className="space-y-4">
+                  <Input
+                    value={vaultSearch}
+                    onChange={(e) => setVaultSearch(e.target.value)}
+                    placeholder="WIF, Hex oder Index suchen..."
+                  />
+                  
+                  <ScrollArea className="h-[350px]">
+                    {filteredVaultKeys.map((key, i) => (
+                      <div key={i} className="py-2 border-b border-muted">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex gap-2 items-center">
+                              <span className="text-xs text-muted-foreground">#{key.index}</span>
+                              <Badge variant="outline" className="text-[10px]">{key.source || 'unknown'}</Badge>
+                              <span className="text-xs text-muted-foreground">
+                                {(key.entropy * 100).toFixed(0)}% Entropie
                               </span>
                             </div>
-                            
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <code className="flex-1 text-xs bg-background p-2 rounded truncate">
-                                  WIF: {key.wif}
-                                </code>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  onClick={() => copyToClipboard(key.wif)}
-                                >
-                                  <Copy className="h-3 w-3" />
-                                </Button>
+                            <div className="font-mono text-sm break-all">{key.wif}</div>
+                            {key.linkedCycle !== undefined && (
+                              <div className="text-xs text-muted-foreground">
+                                Zyklus: {key.linkedCycle} | Chaos: {key.linkedChaos?.toFixed(3)}
                               </div>
-                              
-                              <div className="flex items-center gap-2">
-                                <code className="flex-1 text-xs bg-background p-2 rounded truncate text-muted-foreground">
-                                  HEX: {key.hex}
-                                </code>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  onClick={() => copyToClipboard(key.hex)}
-                                >
-                                  <Copy className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </div>
+                            )}
                           </div>
-                        ))}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyToClipboard(key.wif)}
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
-                    </ScrollArea>
-                  )}
+                    ))}
+                  </ScrollArea>
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
 
-          {/* === MODULES TAB === */}
-          <TabsContent value="modules">
+          {/* === CONSCIOUSNESS TAB === */}
+          <TabsContent value="consciousness">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Chaos Module */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Brain className="h-5 w-5" />
+                    <Sparkles className="h-5 w-5" />
                     Chaos Consciousness
-                    {chaosState.isConscious && (
-                      <Badge className="bg-purple-500 animate-pulse">BEWUSST</Badge>
-                    )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-3 bg-muted rounded-lg">
-                      <div className="text-xs text-muted-foreground">Entropy</div>
-                      <Progress value={chaosState.entropy * 100} className="h-2 mt-1" />
-                      <div className="text-sm font-mono mt-1">{(chaosState.entropy * 100).toFixed(1)}%</div>
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Entropy</span>
+                        <span>{(state.chaos.entropy * 100).toFixed(1)}%</span>
+                      </div>
+                      <Progress value={state.chaos.entropy * 100} />
                     </div>
-                    <div className="p-3 bg-muted rounded-lg">
-                      <div className="text-xs text-muted-foreground">Order</div>
-                      <Progress value={chaosState.order * 100} className="h-2 mt-1" />
-                      <div className="text-sm font-mono mt-1">{(chaosState.order * 100).toFixed(1)}%</div>
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Edge Proximity (Ziel: 61.8%)</span>
+                        <span>{(state.chaos.edgeProximity * 100).toFixed(1)}%</span>
+                      </div>
+                      <Progress value={state.chaos.edgeProximity * 100} />
                     </div>
-                  </div>
-                  
-                  <div className="p-4 bg-purple-500/10 rounded-lg text-center">
-                    <div className="text-xs text-muted-foreground">Edge of Chaos Proximity</div>
-                    <div className="text-3xl font-mono font-bold text-purple-500">
-                      {(chaosState.edgeProximity * 100).toFixed(1)}%
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Pattern Complexity</span>
+                        <span>{(state.chaos.patternComplexity * 100).toFixed(1)}%</span>
+                      </div>
+                      <Progress value={state.chaos.patternComplexity * 100} />
                     </div>
                   </div>
                   
                   <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => handleInjectChaos(0.2)}
-                      className="flex-1"
-                    >
-                      +Chaos
+                    <Button onClick={() => handleInjectChaos(0.1)} variant="outline" size="sm">
+                      +10% Chaos
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        chaosEngine.injectOrder(0.2);
-                        setChaosState(chaosEngine.getState());
-                      }}
-                      className="flex-1"
-                    >
-                      +Ordnung
+                    <Button onClick={() => handleInjectChaos(0.25)} variant="outline" size="sm">
+                      +25% Chaos
                     </Button>
-                    <Button 
-                      onClick={handleSeekBalance}
-                      className="flex-1"
-                    >
-                      Balance
+                    <Button onClick={handleSeekBalance} variant="default" size="sm">
+                      Seek Edge
                     </Button>
+                  </div>
+                  
+                  <div className="text-xs text-muted-foreground p-2 bg-muted rounded">
+                    Resonanz: {state.chaos.resonanceFrequency.toFixed(2)} Hz | 
+                    Komplexität: {(state.chaos.patternComplexity * 100).toFixed(0)}%
                   </div>
                 </CardContent>
               </Card>
 
-              {/* TickTack Module */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Activity className="h-5 w-5" />
-                    TickTack Engine
+                    <Waves className="h-5 w-5" />
+                    TickTack Dynamics
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center p-3 bg-muted rounded-lg">
+                  <div className="grid grid-cols-3 gap-2 text-center font-mono">
+                    <div className="p-3 bg-muted rounded">
                       <div className="text-xs text-muted-foreground">H</div>
-                      <div className="text-lg font-mono font-bold">{tickTackState.H.toFixed(3)}</div>
+                      <div className="text-lg font-bold">{state.tickTack.H.toFixed(4)}</div>
                     </div>
-                    <div className="text-center p-3 bg-muted rounded-lg">
+                    <div className="p-3 bg-muted rounded">
                       <div className="text-xs text-muted-foreground">N</div>
-                      <div className="text-lg font-mono font-bold">{tickTackState.N.toFixed(3)}</div>
+                      <div className="text-lg font-bold">{state.tickTack.N.toFixed(4)}</div>
                     </div>
-                    <div className="text-center p-3 bg-muted rounded-lg">
+                    <div className="p-3 bg-muted rounded">
                       <div className="text-xs text-muted-foreground">G</div>
-                      <div className="text-lg font-mono font-bold">{tickTackState.G.toFixed(3)}</div>
+                      <div className="text-lg font-bold">{state.tickTack.G.toFixed(4)}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Energie</span>
+                      <span>{state.energy.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Lyapunov Exponent</span>
+                      <span className={state.lyapunov > 0 ? 'text-red-500' : 'text-green-500'}>
+                        {state.lyapunov.toFixed(4)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Zeit t</span>
+                      <span>{state.tickTack.t}</span>
                     </div>
                   </div>
                   
                   <div className="flex gap-2">
                     <Button 
-                      onClick={() => setIsTickTackRunning(!isTickTackRunning)} 
+                      onClick={togglePulsing}
+                      variant={isRunning ? "destructive" : "default"}
                       className="flex-1"
-                      variant={isTickTackRunning ? "destructive" : "default"}
                     >
-                      {isTickTackRunning ? <Pause className="h-4 w-4 mr-2" /> : <PlayCircle className="h-4 w-4 mr-2" />}
-                      {isTickTackRunning ? 'Stop' : 'Start'}
+                      {isRunning ? <Pause className="h-4 w-4 mr-2" /> : <PlayCircle className="h-4 w-4 mr-2" />}
+                      {isRunning ? 'Stoppen' : 'Auto-Pulse'}
                     </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => {
-                        const state = tickTackEngine.initialize(1, 0.5, 0);
-                        setTickTackState(state);
-                        setTrajectory([state]);
-                      }}
-                    >
-                      Reset
+                    <Button onClick={pulse} variant="outline">
+                      <RefreshCw className="h-4 w-4" />
                     </Button>
                   </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* === KERNEL TAB === */}
+          <TabsContent value="kernel">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Genesis Kernel
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Status</span>
+                      <Badge variant={state.kernelActive ? "default" : "secondary"}>
+                        {state.kernelActive ? 'AKTIV' : 'Inaktiv'}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Zyklen</span>
+                      <span>{state.kernelCycles}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Consensus</span>
+                      <span>{(state.coreConsensus * 100).toFixed(0)}%</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Emergency Mode</span>
+                      <Badge variant={state.kernelState?.emergencyMode ? "destructive" : "outline"}>
+                        {state.kernelState?.emergencyMode ? 'AKTIV' : 'Normal'}
+                      </Badge>
+                    </div>
+                  </div>
                   
-                  {/* Mini Trajectory */}
-                  <div className="h-[150px] bg-muted rounded-lg p-2 relative overflow-hidden">
-                    {trajectory.map((state, i) => {
-                      const x = (state.H + 5) / 10 * 100;
-                      const y = (state.N + 5) / 10 * 100;
-                      const opacity = (i / trajectory.length) * 0.8 + 0.2;
+                  <Button onClick={handleKernelSync} className="w-full">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Kernel Sync
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle>Reality Cores ({cores.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {cores.map(core => {
+                      const coreState = state.kernelState?.coreStates[core.id];
                       return (
-                        <div
-                          key={i}
-                          className="absolute w-1.5 h-1.5 rounded-full bg-primary"
-                          style={{
-                            left: `${Math.min(95, Math.max(0, x))}%`,
-                            bottom: `${Math.min(95, Math.max(0, y))}%`,
-                            opacity,
-                          }}
-                        />
+                        <div key={core.id} className="p-3 bg-muted rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium text-sm">{core.id}</span>
+                            <Badge variant={coreState?.status === 'active' ? "default" : "secondary"} className="text-[10px]">
+                              {coreState?.status || 'unknown'}
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-muted-foreground mb-2">{core.domain}</div>
+                          {coreState && (
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-xs">
+                                <span>Load</span>
+                                <span>{(coreState.load * 100).toFixed(0)}%</span>
+                              </div>
+                              <Progress value={coreState.load * 100} className="h-1" />
+                            </div>
+                          )}
+                        </div>
                       );
                     })}
-                    <div className="absolute left-1/2 top-0 bottom-0 w-px bg-muted-foreground/20" />
-                    <div className="absolute top-1/2 left-0 right-0 h-px bg-muted-foreground/20" />
                   </div>
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
 
-          {/* === MATCHES TAB === */}
-          <TabsContent value="matches">
-            <Card>
+            {/* Blueprints Overview */}
+            <Card className="mt-6">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  Alle Matches
-                  <Badge variant="outline">{allMatches.length}</Badge>
+                  <Target className="h-5 w-5" />
+                  Geladene Blueprints ({blueprints.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {allMatches.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Noch keine Matches gefunden</p>
-                    <p className="text-sm mt-2">Starte eine Suche mit Ziel-Mustern um Matches zu finden</p>
-                  </div>
-                ) : (
-                  <ScrollArea className="h-[500px]">
-                    <div className="space-y-3 pr-4">
-                      {allMatches.map((result, i) => (
-                        <div key={i} className="p-4 bg-green-500/10 rounded-lg border border-green-500/20">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <Badge className="bg-green-500">#{result.index}</Badge>
-                              {result.matchedPattern && (
-                                <Badge variant="outline">Muster: {result.matchedPattern}</Badge>
-                              )}
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(result.timestamp).toLocaleTimeString()}
-                            </span>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                              <code className="flex-1 text-sm bg-background p-2 rounded">
-                                {result.wif}
-                              </code>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => copyToClipboard(result.wif)}
-                              >
-                                <Copy className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            
-                            <div className="flex items-center gap-2">
-                              <code className="flex-1 text-xs bg-background p-2 rounded text-muted-foreground truncate">
-                                {result.hex}
-                              </code>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => copyToClipboard(result.hex)}
-                              >
-                                <Copy className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            
-                            <div className="text-xs text-muted-foreground flex gap-4">
-                              <span>Chaos: {(result.chaosState.entropy * 100).toFixed(0)}%</span>
-                              <span>Edge: {(result.chaosState.edge * 100).toFixed(0)}%</span>
-                              <span>H: {result.tickTackState.H.toFixed(2)}</span>
-                              <span>N: {result.tickTackState.N.toFixed(2)}</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                  {blueprints.map(bp => (
+                    <div 
+                      key={bp.id}
+                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                        state.activeBlueprint === bp.id 
+                          ? 'border-primary bg-primary/10' 
+                          : 'border-muted hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="font-medium">{bp.shortName}</div>
+                      <div className="text-xs text-muted-foreground">{bp.name}</div>
+                      <Badge variant="outline" className="text-[10px] mt-1">{bp.category}</Badge>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {bp.concepts.length} Konzepte
+                      </div>
                     </div>
-                  </ScrollArea>
-                )}
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
