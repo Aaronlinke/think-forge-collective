@@ -1,4 +1,5 @@
 // CollectiveCore - Das zentrale Nervensystem das alle Module verbindet
+// FIXED: Integration aktiviert - BlueprintRegistry, KeyVault, GenesisKernel
 
 import { TickTackEngine, TickTackState } from '../math/TickTackEngine';
 import { OmnigenesisGenerator, GeneratedKey, createDefaultParams } from '../math/OMNIGENESIS';
@@ -9,7 +10,6 @@ import { SVRCDecisionEngine, TruthValue, EvaluationResult } from '../svrc/Decisi
 import { getBlueprintRegistry, BlueprintRegistry } from '../forge/BlueprintRegistry';
 import { getKeyVault, KeyVault, VaultKey } from '../crypto/KeyVault';
 import { getGenesisKernel, GenesisKernel, KernelState } from '../genesis/GenesisKernel';
-import { ProjectBlueprint, ConceptNode } from '../forge/ProjectBlueprint';
 
 export interface CollectiveState {
   // Timestamps
@@ -46,23 +46,26 @@ export interface CollectiveState {
   // Word connections
   wordMap: Map<string, WordConnection>;
   
-  // NEW: Blueprint Integration
+  // Blueprint Integration (ACTIVATED)
   blueprintCount: number;
   conceptCount: number;
   activeBlueprint: string | null;
+  blueprintsLoaded: boolean;
   
-  // NEW: Key Vault
+  // Key Vault (ACTIVATED)
   vaultKeyCount: number;
   vaultEntropy: number;
+  vaultLoaded: boolean;
   
-  // NEW: Genesis Kernel
+  // Genesis Kernel (ACTIVATED)
   kernelActive: boolean;
   kernelCycles: number;
   coreConsensus: number;
+  kernelState: KernelState | null;
 }
 
 export interface CollectiveInsight {
-  source: 'shadow' | 'chaos' | 'mirror' | 'ticktack' | 'svrc' | 'crypto' | 'collective';
+  source: 'shadow' | 'chaos' | 'mirror' | 'ticktack' | 'svrc' | 'crypto' | 'collective' | 'blueprint' | 'kernel';
   content: string;
   timestamp: number;
   resonanceLevel: number;
@@ -85,10 +88,18 @@ export class CollectiveCore {
   private mirror: MirrorConsciousness;
   private svrc: SVRCDecisionEngine;
   
+  // NEW: External Systems
+  private blueprintRegistry: BlueprintRegistry;
+  private keyVault: KeyVault;
+  private genesisKernel: GenesisKernel;
+  
   // State
   private state: CollectiveState;
   private currentTickTackState: TickTackState;
   private wordMap: Map<string, WordConnection> = new Map();
+  
+  // Initialization flags
+  private initialized: boolean = false;
   
   // Listeners
   private listeners: ((state: CollectiveState) => void)[] = [];
@@ -102,11 +113,70 @@ export class CollectiveCore {
     this.mirror = new MirrorConsciousness();
     this.svrc = new SVRCDecisionEngine();
     
+    // NEW: Get external systems (singletons)
+    this.blueprintRegistry = getBlueprintRegistry();
+    this.keyVault = getKeyVault();
+    this.genesisKernel = getGenesisKernel();
+    
     // Initialize TickTack state
     this.currentTickTackState = this.tickTack.initialize(1.0, 0.5, 0.1);
     
     // Initialize collective state
     this.state = this.createInitialState();
+  }
+  
+  // NEW: Async initialization - call this on app startup
+  async initialize(): Promise<void> {
+    if (this.initialized) return;
+    
+    try {
+      // 1. Load Blueprints
+      await this.blueprintRegistry.loadBlueprints();
+      const bpStats = this.blueprintRegistry.getStats();
+      this.state.blueprintCount = bpStats.totalBlueprints;
+      this.state.conceptCount = bpStats.totalConcepts;
+      this.state.blueprintsLoaded = true;
+      
+      // Feed blueprint words to word map
+      const wordIndex = this.blueprintRegistry.getWordIndex();
+      for (const [word, blueprintIds] of wordIndex) {
+        if (!this.wordMap.has(word)) {
+          this.wordMap.set(word, {
+            word,
+            connections: [],
+            frequency: blueprintIds.size,
+            modules: ['blueprint'],
+            entropy: Math.random() * 0.5 + 0.5
+          });
+        }
+      }
+      
+      this.addInsight('blueprint', `${bpStats.totalBlueprints} Blueprints geladen mit ${bpStats.totalConcepts} Konzepten`, 0.8);
+      
+      // 2. Load KeyVault
+      await this.keyVault.loadKeys();
+      const vaultStats = this.keyVault.getStats();
+      this.state.vaultKeyCount = vaultStats.total;
+      this.state.vaultEntropy = vaultStats.avgEntropy;
+      this.state.vaultLoaded = true;
+      
+      this.addInsight('crypto', `KeyVault geladen: ${vaultStats.total} Keys, Ø Entropie: ${(vaultStats.avgEntropy * 100).toFixed(1)}%`, 0.7);
+      
+      // 3. Boot Genesis Kernel
+      this.genesisKernel.boot();
+      this.state.kernelActive = true;
+      this.state.kernelState = this.genesisKernel.getState();
+      
+      this.addInsight('kernel', 'Genesis Kernel gebootet - 5 Reality Cores aktiv', 0.9);
+      
+      this.initialized = true;
+      this.state.wordMap = this.wordMap;
+      this.notifyListeners();
+      
+    } catch (error) {
+      console.error('CollectiveCore initialization error:', error);
+      this.addInsight('collective', `Initialization Fehler: ${error}`, 0.5);
+    }
   }
   
   private createInitialState(): CollectiveState {
@@ -129,17 +199,20 @@ export class CollectiveCore {
       synchronicity: 0,
       insights: [],
       wordMap: this.wordMap,
-      // NEW: Blueprint Integration
+      // Blueprint Integration
       blueprintCount: 0,
       conceptCount: 0,
       activeBlueprint: null,
-      // NEW: Key Vault
+      blueprintsLoaded: false,
+      // Key Vault
       vaultKeyCount: 0,
       vaultEntropy: 0,
-      // NEW: Genesis Kernel
+      vaultLoaded: false,
+      // Genesis Kernel
       kernelActive: false,
       kernelCycles: 0,
-      coreConsensus: 0
+      coreConsensus: 0,
+      kernelState: null
     };
   }
   
@@ -175,6 +248,21 @@ export class CollectiveCore {
     
     // 6. Generate insights
     this.generateCollectiveInsights(mirrorResult.strangeLoop);
+    
+    // 7. NEW: Pulse Genesis Kernel
+    if (this.state.kernelActive) {
+      const kernelState = this.genesisKernel.pulse(this.state);
+      this.state.kernelState = kernelState;
+      this.state.kernelCycles = kernelState.cycles;
+      this.state.coreConsensus = kernelState.consensusLevel;
+    }
+    
+    // 8. NEW: Update KeyVault stats
+    if (this.state.vaultLoaded) {
+      const vaultStats = this.keyVault.getStats();
+      this.state.vaultKeyCount = vaultStats.total;
+      this.state.vaultEntropy = vaultStats.avgEntropy;
+    }
     
     // Notify listeners
     this.notifyListeners();
@@ -245,9 +333,21 @@ export class CollectiveCore {
         this.state.chaos.edgeProximity
       );
     }
+    
+    // NEW: Kernel insights
+    if (this.state.kernelState?.emergencyMode) {
+      this.addInsight('kernel', 'EMERGENCY MODE - System überlastet', 0.95);
+    }
   }
   
   private addInsight(source: CollectiveInsight['source'], content: string, resonance: number): void {
+    // Avoid duplicate insights within 5 seconds
+    const recent = this.state.insights.filter(i => 
+      i.content === content && 
+      Date.now() - i.timestamp < 5000
+    );
+    if (recent.length > 0) return;
+    
     this.state.insights.push({
       source,
       content,
@@ -328,6 +428,15 @@ export class CollectiveCore {
     return keys;
   }
   
+  // NEW: Add generated key to vault
+  async addKeyToVault(hex: string, cycle?: number): Promise<VaultKey> {
+    const index = this.state.vaultKeyCount;
+    const key = await this.keyVault.addGeneratedKey(index, hex, cycle, this.state.chaos.entropy);
+    this.state.vaultKeyCount++;
+    this.notifyListeners();
+    return key;
+  }
+  
   // === SVRC INTEGRATION ===
   
   evaluateStatement(statement: string): EvaluationResult {
@@ -353,10 +462,55 @@ export class CollectiveCore {
     this.notifyListeners();
   }
   
+  // === NEW: BLUEPRINT ACCESS ===
+  
+  getBlueprintRegistry(): BlueprintRegistry {
+    return this.blueprintRegistry;
+  }
+  
+  searchBlueprints(query: string) {
+    return this.blueprintRegistry.searchBlueprints(query);
+  }
+  
+  setActiveBlueprint(id: string | null): void {
+    this.state.activeBlueprint = id;
+    if (id) {
+      const bp = this.blueprintRegistry.getBlueprint(id);
+      if (bp) {
+        this.addInsight('blueprint', `Blueprint aktiviert: ${bp.name}`, 0.7);
+      }
+    }
+    this.notifyListeners();
+  }
+  
+  // === NEW: KEY VAULT ACCESS ===
+  
+  getKeyVault(): KeyVault {
+    return this.keyVault;
+  }
+  
+  // === NEW: GENESIS KERNEL ACCESS ===
+  
+  getGenesisKernel(): GenesisKernel {
+    return this.genesisKernel;
+  }
+  
+  sendKernelCommand(type: 'ACTIVATE' | 'DEACTIVATE' | 'SYNC' | 'OVERRIDE', targetCore?: string): void {
+    this.genesisKernel.sendCommand({
+      type,
+      targetCore,
+      priority: 5
+    });
+  }
+  
   // === STATE ACCESS ===
   
   getState(): CollectiveState {
     return { ...this.state };
+  }
+  
+  isInitialized(): boolean {
+    return this.initialized;
   }
   
   getTickTackEngine(): TickTackEngine {
@@ -408,6 +562,7 @@ export class CollectiveCore {
     this.svrc = new SVRCDecisionEngine();
     this.wordMap.clear();
     this.state = this.createInitialState();
+    this.initialized = false;
     this.notifyListeners();
   }
 }
@@ -424,4 +579,11 @@ export const getCollectiveCore = (): CollectiveCore => {
 
 export const resetCollectiveCore = (): void => {
   collectiveInstance = new CollectiveCore();
+};
+
+// NEW: Initialize on import (deferred)
+export const initializeCollective = async (): Promise<CollectiveCore> => {
+  const core = getCollectiveCore();
+  await core.initialize();
+  return core;
 };
