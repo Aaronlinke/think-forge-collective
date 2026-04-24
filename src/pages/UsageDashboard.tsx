@@ -37,7 +37,10 @@ const UsageDashboard = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setLoading(false);
-        navigate("/auth");
+        setModuleStats([]);
+        setUserStats(null);
+        setTotalConversations(0);
+        setCollectiveUsage(0);
         return;
       }
 
