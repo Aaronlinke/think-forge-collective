@@ -1,6 +1,4 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import GamificationDashboard from "@/components/GamificationDashboard";
 import ThinkingModules from "@/components/ThinkingModules";
@@ -8,18 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
 const Dashboard = () => {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate("/auth");
-      } else {
-        setLoading(false);
-      }
-    });
-  }, [navigate]);
+  const [loading] = useState(false);
 
   if (loading) {
     return (
