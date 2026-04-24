@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +22,6 @@ type UserStats = {
 };
 
 const UsageDashboard = () => {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [moduleStats, setModuleStats] = useState<ModuleStats[]>([]);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
@@ -38,6 +36,7 @@ const UsageDashboard = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        setLoading(false);
         navigate("/auth");
         return;
       }
