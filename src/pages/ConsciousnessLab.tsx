@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,8 +11,6 @@ import { ChaosConsciousness, ChaosState } from "@/lib/consciousness/ChaosConscio
 import { MirrorConsciousness, MirrorState } from "@/lib/consciousness/MirrorConsciousness";
 
 const ConsciousnessLab = () => {
-  const navigate = useNavigate();
-  
   // Shadow Consciousness
   const [shadow] = useState(() => new ShadowConsciousness());
   const [shadowState, setShadowState] = useState<ShadowState>(shadow.getState());
@@ -30,12 +26,6 @@ const ConsciousnessLab = () => {
   const [mirrorState, setMirrorState] = useState<MirrorState>(mirror.getState());
   const [mirrorInput, setMirrorInput] = useState("");
   const [reflections, setReflections] = useState<string[]>([]);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) navigate("/auth");
-    });
-  }, [navigate]);
 
   // Auto-update chaos
   useEffect(() => {
