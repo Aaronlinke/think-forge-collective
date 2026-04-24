@@ -1,7 +1,4 @@
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,18 +8,11 @@ import { Clock, Play, RotateCcw, Zap, TrendingUp } from "lucide-react";
 import { TickTackEngine } from "@/lib/math/TickTackEngine";
 
 const TimeMachine = () => {
-  const navigate = useNavigate();
   const [timeRange, setTimeRange] = useState<[number, number]>([-5, 5]);
   const [initialH, setInitialH] = useState(1);
   const [initialN, setInitialN] = useState(0.5);
   const [initialG, setInitialG] = useState(0.1);
   const [isAnimating, setIsAnimating] = useState(false);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) navigate("/auth");
-    });
-  }, [navigate]);
 
   const engine = useMemo(() => new TickTackEngine(), []);
 

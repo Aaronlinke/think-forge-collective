@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,64 +9,22 @@ import { toast } from "sonner";
 import { User, Mail, KeyRound, Sparkles } from "lucide-react";
 
 const Settings = () => {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [username, setUsername] = useState("Kollektiv-Nutzer");
   const [forceFreeMode, setForceFreeMode] = useState(() => {
     return localStorage.getItem("forceFreeMode") === "true";
   });
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate("/auth");
-      } else {
-        setEmail(session.user.email || "");
-        loadProfile(session.user.id);
-      }
-    });
-  }, [navigate]);
-
-  const loadProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("username")
-        .eq("id", userId)
-        .single();
-
-      if (error) throw error;
-      if (data) {
-        setUsername(data.username || "");
-      }
-    } catch (error) {
-      console.error("Error loading profile:", error);
-    } finally {
-      setLoading(false);
+    const savedName = localStorage.getItem("collectiveDisplayName");
+    if (savedName) {
+      setUsername(savedName);
     }
-  };
+  }, []);
 
   const handleSaveProfile = async () => {
-    setSaving(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const { error } = await supabase
-        .from("profiles")
-        .update({ username })
-        .eq("id", user.id);
-
-      if (error) throw error;
-      toast.success("Profil gespeichert!");
-    } catch (error) {
-      console.error("Error saving profile:", error);
-      toast.error("Fehler beim Speichern");
-    } finally {
-      setSaving(false);
-    }
+    localStorage.setItem("collectiveDisplayName", username.trim() || "Kollektiv-Nutzer");
+    toast.success("Lokales Profil gespeichert!");
   };
 
   if (loading) {
@@ -96,7 +52,7 @@ const Settings = () => {
                 <User className="h-5 w-5" />
                 Profil
               </CardTitle>
-              <CardDescription>Deine persönlichen Informationen</CardDescription>
+              <CardDescription>Lokale Einstellungen für diese Session</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -105,27 +61,26 @@ const Settings = () => {
                   id="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Dein Benutzername"
+                  placeholder="Dein Anzeigename"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email" className="flex items-center gap-2">
                   <Mail className="h-4 w-4" />
-                  E-Mail
+                  Modus
                 </Label>
                 <Input
                   id="email"
-                  type="email"
-                  value={email}
+                  value="Lokaler Zugriff ohne Anmeldung"
                   disabled
                   className="bg-muted"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Die E-Mail-Adresse kann nicht geändert werden
+                  Es werden keine Login-Daten mehr benötigt
                 </p>
               </div>
-              <Button onClick={handleSaveProfile} disabled={saving} className="w-full">
-                {saving ? "Wird gespeichert..." : "Profil speichern"}
+              <Button onClick={handleSaveProfile} className="w-full">
+                Profil lokal speichern
               </Button>
             </CardContent>
           </Card>
@@ -165,26 +120,14 @@ const Settings = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <KeyRound className="h-5 w-5" />
-                Sicherheit
+                Zugriff
               </CardTitle>
-              <CardDescription>Verwalte deine Sicherheitseinstellungen</CardDescription>
+              <CardDescription>Der Zugang läuft jetzt direkt ohne Anmeldebarriere</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: `${window.location.origin}/`,
-                  });
-                  if (error) {
-                    toast.error("Fehler beim Zurücksetzen des Passworts");
-                  } else {
-                    toast.success("Passwort-Reset-Link gesendet!");
-                  }
-                }}
-              >
-                Passwort zurücksetzen
-              </Button>
+              <div className="rounded-lg border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
+                Login, Passwort-Reset und Session-Zwang sind aus der Oberfläche entfernt.
+              </div>
             </CardContent>
           </Card>
         </div>

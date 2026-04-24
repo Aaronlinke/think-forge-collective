@@ -1,6 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useCallback, useMemo } from "react";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,8 +19,6 @@ import { privateKeyToWIF } from "@/lib/crypto/BitcoinUtils";
 import { paramsFromSeed } from "@/lib/math/OMNIGENESIS";
 
 const CryptoAnalyzer = () => {
-  const navigate = useNavigate();
-  
   // USE THE SHARED COLLECTIVE - Everything is synchronized!
   const { 
     state, 
@@ -34,6 +30,7 @@ const CryptoAnalyzer = () => {
     pulse,
     processInput,
     generateKeys,
+    syncCollectiveMesh,
     addKeyToVault,
     getVaultKeys,
     searchVaultKeys,
@@ -53,15 +50,14 @@ const CryptoAnalyzer = () => {
   const [batchSize, setBatchSize] = useState(10);
   const [startIndex, setStartIndex] = useState(0);
   const [vaultSearch, setVaultSearch] = useState("");
+  const [collectivePrompt, setCollectivePrompt] = useState("");
   const [generatedKeys, setGeneratedKeys] = useState<{ index: number; hex: string; wif: string }[]>([]);
   const [svrcQuery, setSvrcQuery] = useState("");
   const [svrcHistory, setSvrcHistory] = useState<{ query: string; value: string; confidence: number }[]>([]);
-  
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) navigate("/auth");
-    });
-  }, [navigate]);
+  const wordNetwork = useMemo(
+    () => state.wordMap ? Array.from(state.wordMap.values()).sort((a, b) => b.frequency - a.frequency).slice(0, 8) : [],
+    [state.wordMap]
+  );
 
   // === GENERATE KEYS WITH COLLECTIVE STATE ===
   const handleGenerateBatch = useCallback(async () => {
@@ -78,6 +74,10 @@ const CryptoAnalyzer = () => {
       o: BigInt(startIndex),
       r: BigInt(17)
     };
+
+    if (seedText || collectivePrompt) {
+      syncCollectiveMesh(seedText || collectivePrompt);
+    }
     
     const generator = getOmnigenesis();
     const keys: { index: number; hex: string; wif: string }[] = [];
@@ -93,7 +93,7 @@ const CryptoAnalyzer = () => {
     
     setGeneratedKeys(keys);
     toast.success(`${batchSize} Keys generiert und im Vault gespeichert`);
-  }, [seedText, startIndex, batchSize, state.cycle, getChaosConsciousness, getTickTackEngine, getOmnigenesis, addKeyToVault]);
+  }, [seedText, collectivePrompt, startIndex, batchSize, state.cycle, getChaosConsciousness, getTickTackEngine, getOmnigenesis, addKeyToVault, syncCollectiveMesh]);
 
   // === INJECT CHAOS ===
   const handleInjectChaos = useCallback((amount: number) => {
@@ -134,6 +134,13 @@ const CryptoAnalyzer = () => {
     pulse();
     toast.success("Kernel synchronisiert");
   }, [sendKernelCommand, pulse]);
+
+  const handleCollectiveSync = useCallback(() => {
+    const prompt = collectivePrompt.trim();
+    syncCollectiveMesh(prompt || seedText || svrcQuery || undefined);
+    if (prompt) setCollectivePrompt("");
+    toast.success("Kollektiv neu verschaltet");
+  }, [collectivePrompt, seedText, svrcQuery, syncCollectiveMesh]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -373,6 +380,63 @@ const CryptoAnalyzer = () => {
                         </div>
                       ))}
                     </ScrollArea>
+                  </div>
+
+                  <div className="space-y-3 rounded-lg border border-border bg-muted/40 p-4">
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <div>
+                        <div className="text-sm font-medium">Kollektiv-Mesh</div>
+                        <div className="text-xs text-muted-foreground">
+                          Verknüpft Blueprint, Kernel, Wortnetz und Generator in einem Schritt
+                        </div>
+                      </div>
+                      <Button onClick={handleCollectiveSync} size="sm">
+                        <Network className="h-4 w-4 mr-2" />
+                        Voll-Sync
+                      </Button>
+                    </div>
+
+                    <Input
+                      value={collectivePrompt}
+                      onChange={(e) => setCollectivePrompt(e.target.value)}
+                      placeholder="Ziel, Begriff oder Blueprint eingeben..."
+                      onKeyDown={(e) => e.key === 'Enter' && handleCollectiveSync()}
+                    />
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                      <div className="rounded-md bg-background p-3 border border-border">
+                        <div className="text-muted-foreground">Aktiver Blueprint</div>
+                        <div className="font-medium mt-1 break-all">{state.activeBlueprint || 'auto'}</div>
+                      </div>
+                      <div className="rounded-md bg-background p-3 border border-border">
+                        <div className="text-muted-foreground">Konzepte</div>
+                        <div className="font-medium mt-1">{state.conceptCount}</div>
+                      </div>
+                      <div className="rounded-md bg-background p-3 border border-border">
+                        <div className="text-muted-foreground">Kernel-Konsens</div>
+                        <div className="font-medium mt-1">{(state.coreConsensus * 100).toFixed(0)}%</div>
+                      </div>
+                      <div className="rounded-md bg-background p-3 border border-border">
+                        <div className="text-muted-foreground">Wortknoten</div>
+                        <div className="font-medium mt-1">{state.wordMap?.size || 0}</div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-xs text-muted-foreground mb-2">Stärkste Kollektiv-Signale</div>
+                      <div className="flex flex-wrap gap-2">
+                        {wordNetwork.length === 0 ? (
+                          <Badge variant="outline">Noch keine Knoten</Badge>
+                        ) : (
+                          wordNetwork.map((node) => (
+                            <Badge key={node.word} variant="secondary" className="gap-1">
+                              {node.word}
+                              <span className="text-[10px] opacity-70">{node.frequency}</span>
+                            </Badge>
+                          ))
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

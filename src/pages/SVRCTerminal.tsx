@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,19 +14,12 @@ interface HistoryEntry {
 }
 
 const SVRCTerminal = () => {
-  const navigate = useNavigate();
   const [engine] = useState(() => new SVRCDecisionEngine());
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [axioms, setAxioms] = useState<Axiom[]>([]);
   const [newAxiomName, setNewAxiomName] = useState("");
   const [newAxiomValue, setNewAxiomValue] = useState<boolean | null>(true);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) navigate("/auth");
-    });
-  }, [navigate]);
 
   useEffect(() => {
     setAxioms(engine.getAxioms());

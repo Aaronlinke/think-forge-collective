@@ -7,6 +7,7 @@ import {
   initializeCollective
 } from '@/lib/collective/CollectiveCore';
 import { GeneratedKey } from '@/lib/math/OMNIGENESIS';
+import { OmnigenesisParams } from '@/lib/math/OMNIGENESIS';
 import { EvaluationResult, TruthValue } from '@/lib/svrc/DecisionEngine';
 import { VaultKey } from '@/lib/crypto/KeyVault';
 import { KernelState, RealityCoreType } from '@/lib/genesis/GenesisKernel';
@@ -70,6 +71,14 @@ export const useCollectiveCore = () => {
   
   const generateKeys = useCallback((count?: number): GeneratedKey[] => {
     return core.generateCryptoKeys(count);
+  }, [core]);
+
+  const configureOmnigenesis = useCallback((params: OmnigenesisParams) => {
+    core.configureOmnigenesis(params);
+  }, [core]);
+
+  const syncCollectiveMesh = useCallback((input?: string) => {
+    return core.syncCollectiveMesh(input);
   }, [core]);
   
   const evaluateStatement = useCallback((statement: string): EvaluationResult => {
@@ -185,6 +194,8 @@ export const useCollectiveCore = () => {
     
     // Crypto
     generateKeys,
+    configureOmnigenesis,
+    syncCollectiveMesh,
     addKeyToVault,
     getVaultKeys,
     searchVaultKeys,
