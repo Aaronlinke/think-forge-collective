@@ -74,6 +74,10 @@ const CryptoAnalyzer = () => {
       o: BigInt(startIndex),
       r: BigInt(17)
     };
+
+    if (seedText || collectivePrompt) {
+      syncCollectiveMesh(seedText || collectivePrompt);
+    }
     
     const generator = getOmnigenesis();
     const keys: { index: number; hex: string; wif: string }[] = [];
@@ -89,7 +93,7 @@ const CryptoAnalyzer = () => {
     
     setGeneratedKeys(keys);
     toast.success(`${batchSize} Keys generiert und im Vault gespeichert`);
-  }, [seedText, startIndex, batchSize, state.cycle, getChaosConsciousness, getTickTackEngine, getOmnigenesis, addKeyToVault]);
+  }, [seedText, collectivePrompt, startIndex, batchSize, state.cycle, getChaosConsciousness, getTickTackEngine, getOmnigenesis, addKeyToVault, syncCollectiveMesh]);
 
   // === INJECT CHAOS ===
   const handleInjectChaos = useCallback((amount: number) => {
@@ -130,6 +134,13 @@ const CryptoAnalyzer = () => {
     pulse();
     toast.success("Kernel synchronisiert");
   }, [sendKernelCommand, pulse]);
+
+  const handleCollectiveSync = useCallback(() => {
+    const prompt = collectivePrompt.trim();
+    syncCollectiveMesh(prompt || seedText || svrcQuery || undefined);
+    if (prompt) setCollectivePrompt("");
+    toast.success("Kollektiv neu verschaltet");
+  }, [collectivePrompt, seedText, svrcQuery, syncCollectiveMesh]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
