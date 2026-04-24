@@ -20,7 +20,7 @@ const Settings = () => {
     if (savedName) {
       setUsername(savedName);
     }
-  };
+  }, []);
 
   const handleSaveProfile = async () => {
     localStorage.setItem("collectiveDisplayName", username.trim() || "Kollektiv-Nutzer");
