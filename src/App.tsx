@@ -7,7 +7,6 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import SharedConversation from "./pages/SharedConversation";
@@ -39,7 +38,6 @@ const App = () => (
           <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/usage" element={<UsageDashboard />} />
