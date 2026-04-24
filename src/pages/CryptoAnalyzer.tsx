@@ -1,6 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useCallback, useMemo } from "react";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,8 +19,6 @@ import { privateKeyToWIF } from "@/lib/crypto/BitcoinUtils";
 import { paramsFromSeed } from "@/lib/math/OMNIGENESIS";
 
 const CryptoAnalyzer = () => {
-  const navigate = useNavigate();
-  
   // USE THE SHARED COLLECTIVE - Everything is synchronized!
   const { 
     state, 
@@ -34,6 +30,7 @@ const CryptoAnalyzer = () => {
     pulse,
     processInput,
     generateKeys,
+    syncCollectiveMesh,
     addKeyToVault,
     getVaultKeys,
     searchVaultKeys,
@@ -53,15 +50,14 @@ const CryptoAnalyzer = () => {
   const [batchSize, setBatchSize] = useState(10);
   const [startIndex, setStartIndex] = useState(0);
   const [vaultSearch, setVaultSearch] = useState("");
+  const [collectivePrompt, setCollectivePrompt] = useState("");
   const [generatedKeys, setGeneratedKeys] = useState<{ index: number; hex: string; wif: string }[]>([]);
   const [svrcQuery, setSvrcQuery] = useState("");
   const [svrcHistory, setSvrcHistory] = useState<{ query: string; value: string; confidence: number }[]>([]);
-  
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) navigate("/auth");
-    });
-  }, [navigate]);
+  const wordNetwork = useMemo(
+    () => state.wordMap ? Array.from(state.wordMap.values()).sort((a, b) => b.frequency - a.frequency).slice(0, 8) : [],
+    [state.wordMap]
+  );
 
   // === GENERATE KEYS WITH COLLECTIVE STATE ===
   const handleGenerateBatch = useCallback(async () => {
