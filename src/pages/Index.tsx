@@ -1,24 +1,11 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import HeroSection from "@/components/HeroSection";
 import ThinkingModules from "@/components/ThinkingModules";
 import CollectiveIntelligence from "@/components/CollectiveIntelligence";
 
 const Index = () => {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate("/dashboard");
-      } else {
-        setLoading(false);
-      }
-    });
-  }, [navigate]);
+  const [loading] = useState(false);
 
   if (loading) {
     return (
