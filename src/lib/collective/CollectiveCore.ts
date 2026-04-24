@@ -2,7 +2,7 @@
 // FIXED: Integration aktiviert - BlueprintRegistry, KeyVault, GenesisKernel
 
 import { TickTackEngine, TickTackState } from '../math/TickTackEngine';
-import { OmnigenesisGenerator, GeneratedKey, createDefaultParams } from '../math/OMNIGENESIS';
+import { OmnigenesisGenerator, GeneratedKey, OmnigenesisParams, createDefaultParams } from '../math/OMNIGENESIS';
 import { ShadowConsciousness, ShadowState } from '../consciousness/ShadowConsciousness';
 import { ChaosConsciousness, ChaosState } from '../consciousness/ChaosConsciousness';
 import { MirrorConsciousness, MirrorState } from '../consciousness/MirrorConsciousness';
@@ -426,6 +426,37 @@ export class CollectiveCore {
     
     this.notifyListeners();
     return keys;
+  }
+
+  configureOmnigenesis(params: OmnigenesisParams): void {
+    this.omnigenesis = new OmnigenesisGenerator(params);
+    this.addInsight('crypto', 'OMNIGENESIS Parameter an den Kollektiv-Zustand angepasst', 0.78);
+    this.notifyListeners();
+  }
+
+  syncCollectiveMesh(input?: string): CollectiveState {
+    if (input?.trim()) {
+      this.processInput(input);
+
+      const matchingBlueprint = this.blueprintRegistry.searchBlueprints(input)[0];
+      if (matchingBlueprint) {
+        this.state.activeBlueprint = matchingBlueprint.id;
+        this.addInsight('blueprint', `Kollektiv auf Blueprint ${matchingBlueprint.shortName} ausgerichtet`, 0.82);
+      }
+    }
+
+    const conceptBoost = Math.max(1, this.state.conceptCount || 1);
+    const params: OmnigenesisParams = {
+      h: BigInt(Math.max(1, Math.floor(Math.abs(this.state.tickTack.H) * 1e15))),
+      n: BigInt(Math.max(1, Math.floor(this.state.chaos.entropy * 1e15))),
+      g: BigInt(Math.max(1, Math.floor(this.state.coherence * conceptBoost * 1e12))),
+      o: BigInt(this.state.cycle),
+      r: BigInt(Math.max(2, Math.floor((this.state.synchronicity + 0.1) * 1e6) | 1))
+    };
+
+    this.configureOmnigenesis(params);
+    this.sendKernelCommand('SYNC');
+    return this.pulse();
   }
   
   // NEW: Add generated key to vault
